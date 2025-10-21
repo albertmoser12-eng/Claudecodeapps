@@ -182,7 +182,7 @@ function renderAbbreviationsForm(abbreviations) {
         formGroup.className = 'form-group';
 
         const label = document.createElement('label');
-        label.textContent = `${abbrev.abbreviation} (found in: ${abbrev.example_columns.join(', ')})`;
+        label.textContent = `${abbrev.abbreviation} (found in: ${abbrev.example_terms.join(', ')})`;
 
         const select = document.createElement('select');
         select.className = 'abbreviation-select';
@@ -312,12 +312,11 @@ function renderGlossaryCards(glossary) {
             `;
         }
 
-        // Associated Columns
-        if (item.associated_columns) {
-            const columns = item.associated_columns.split('|');
+        // Original Term
+        if (item.original_term) {
             infoHTML += `
                 <div class="info-item">
-                    <strong>Associated Database Columns:</strong> ${columns.map(c => `<code>${escapeHtml(c)}</code>`).join(', ')}
+                    <strong>Original Term:</strong> <code>${escapeHtml(item.original_term)}</code>
                 </div>
             `;
         }
@@ -340,7 +339,7 @@ function generateCSV(glossary) {
         'Synonyms',
         'Allowed Values',
         'Data Domain',
-        'Associated Database Columns'
+        'Original Term'
     ];
 
     const rows = glossary.map(item => [
@@ -351,7 +350,7 @@ function generateCSV(glossary) {
         (item.synonyms || []).join('; '),
         (item.allowed_values || []).join('; '),
         item.data_domain || '',
-        item.associated_columns || ''
+        item.original_term || ''
     ]);
 
     const csvRows = [headers, ...rows].map(row =>

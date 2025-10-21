@@ -627,23 +627,61 @@
         }
 
         function parseCSV(text) {
-            const lines = text.split('\n');
+            const lines = text.split('\n').filter(line => line.trim().length > 0);
             if (lines.length === 0) return [];
 
-            // First line is headers
+            // Parse CSV - extract terms from rows (not headers)
+            const terms = [];
+
+            // First line contains headers
             const headers = lines[0].split(',').map(h => h.trim().replace(/['"]/g, ''));
-            return headers.filter(h => h.length > 0);
+
+            // Find column index for term (look for 'term', 'business_term', 'name', or use first column)
+            let termColumnIndex = 0;
+            const termColumnNames = ['term', 'business_term', 'name', 'business term'];
+            for (let i = 0; i < headers.length; i++) {
+                if (termColumnNames.includes(headers[i].toLowerCase())) {
+                    termColumnIndex = i;
+                    break;
+                }
+            }
+
+            // Extract terms from data rows (skip header row)
+            for (let i = 1; i < lines.length; i++) {
+                const cells = lines[i].split(',').map(c => c.trim().replace(/['"]/g, ''));
+                if (cells.length > termColumnIndex && cells[termColumnIndex].trim()) {
+                    terms.push(cells[termColumnIndex].trim());
+                }
+            }
+
+            return terms.length > 0 ? terms : [];
         }
 
         function parseJSON(text) {
             try {
                 const data = JSON.parse(text);
-                if (Array.isArray(data) && data.length > 0) {
-                    return Object.keys(data[0]);
-                } else if (typeof data === 'object') {
-                    return Object.keys(data);
+                const terms = [];
+
+                if (Array.isArray(data)) {
+                    // If it's a list of strings, use them directly
+                    if (data.every(item => typeof item === 'string')) {
+                        return data.map(item => item.trim()).filter(item => item.length > 0);
+                    }
+                    // If it's a list of objects, look for 'term', 'business_term', or 'name' field
+                    else if (data.every(item => typeof item === 'object')) {
+                        data.forEach(item => {
+                            if (item.term) {
+                                terms.push(item.term.trim());
+                            } else if (item.business_term) {
+                                terms.push(item.business_term.trim());
+                            } else if (item.name) {
+                                terms.push(item.name.trim());
+                            }
+                        });
+                    }
                 }
-                return [];
+
+                return terms.filter(t => t.length > 0);
             } catch (e) {
                 throw new Error('Invalid JSON format');
             }
@@ -655,70 +693,41 @@
                 .filter(line => line.length > 0);
         }
 
-        // Generate glossary from column names
-        function generateGlossary(columns) {
-            // Group similar columns
-            const groupedColumns = groupSimilarColumns(columns);
-
-            // Generate glossary entries
+        // Generate glossary from business terms
+        function generateGlossary(terms) {
+            // Generate glossary entries for each term
             const glossary = [];
 
-            for (const [term, cols] of Object.entries(groupedColumns)) {
-                const entry = generateGlossaryEntry(term, cols);
+            for (const term of terms) {
+                const entry = generateGlossaryEntry(term);
                 glossary.push(entry);
             }
 
             return glossary.sort((a, b) => a.business_term.localeCompare(b.business_term));
         }
 
-        function groupSimilarColumns(columns) {
-            const groups = {};
-
-            for (const col of columns) {
-                // Normalize column name for grouping
-                const baseName = col.toLowerCase()
-                    .replace(/_id$/i, '')
-                    .replace(/_amt$/i, '')
-                    .replace(/_num$/i, '')
-                    .replace(/_dt$/i, '')
-                    .replace(/_date$/i, '')
-                    .replace(/_/g, ' ')
-                    .replace(/-/g, ' ')
-                    .trim();
-
-                const key = baseName || col;
-
-                if (!groups[key]) {
-                    groups[key] = [];
-                }
-                groups[key].push(col);
-            }
-
-            return groups;
-        }
-
-        function generateGlossaryEntry(baseName, columns) {
-            // Format business term
-            const businessTerm = formatBusinessTerm(baseName);
+        function generateGlossaryEntry(term) {
+            // Clean and format the business term
+            const businessTerm = formatBusinessTerm(term);
 
             // Determine term type
-            const termType = determineTermType(businessTerm, columns);
+            const termType = determineTermType(businessTerm);
 
             // Determine data domain
-            const dataDomain = determineDomain(businessTerm, columns);
+            const dataDomain = determineDomain(businessTerm);
 
             // Generate three-layer definition
-            const definition = generateThreeLayerDefinition(businessTerm, termType, dataDomain, columns);
+            const definition = generateThreeLayerDefinition(businessTerm, termType, dataDomain);
 
             return {
                 business_term: businessTerm,
                 business_definition: definition.layer1,
                 business_context: definition.layer2,
                 technical_bridge: definition.layer3,
-                synonyms: generateSynonyms(businessTerm, columns),
-                allowed_values: generateAllowedValues(businessTerm, columns),
+                synonyms: generateSynonyms(businessTerm),
+                allowed_values: generateAllowedValues(businessTerm),
                 data_domain: dataDomain,
-                associated_columns: columns.join('|')
+                original_term: term
             };
         }
 
@@ -729,7 +738,7 @@
                 .join(' ');
         }
 
-        function determineTermType(term, columns) {
+        function determineTermType(term) {
             const lowerTerm = term.toLowerCase();
             const metricKeywords = ['ratio', 'rate', 'percentage', 'count', 'total', 'number', 'sum', 'average'];
 
@@ -740,13 +749,12 @@
             return 'Business term';
         }
 
-        function determineDomain(term, columns) {
+        function determineDomain(term) {
             const lowerTerm = term.toLowerCase();
-            const colStr = columns.join(' ').toLowerCase();
 
             // Domain classification logic
-            if (lowerTerm.includes('claim') || colStr.includes('claim')) return 'Claims';
-            if (lowerTerm.includes('policy') || lowerTerm.includes('coverage') || colStr.includes('policy')) return 'Policy';
+            if (lowerTerm.includes('claim')) return 'Claims';
+            if (lowerTerm.includes('policy') || lowerTerm.includes('coverage')) return 'Policy';
             if (lowerTerm.includes('customer') || lowerTerm.includes('insured') || lowerTerm.includes('policyholder')) return 'Customer';
             if (lowerTerm.includes('premium') || lowerTerm.includes('payment') || lowerTerm.includes('amount')) return 'Finance';
             if (lowerTerm.includes('broker')) return 'Broker';
@@ -757,7 +765,7 @@
             return 'Policy'; // Default
         }
 
-        function generateThreeLayerDefinition(term, termType, domain, columns) {
+        function generateThreeLayerDefinition(term, termType, domain) {
             const lowerTerm = term.toLowerCase();
 
             // Layer 1: Business Definition (1-2 sentences, plain language)
@@ -816,8 +824,8 @@
             if (lowerTerm.includes('number') || lowerTerm.includes('id') ||
                 lowerTerm.includes('amount') || lowerTerm.includes('status')) {
                 const tableName = domain.toUpperCase();
-                const primaryCol = columns[0];
-                layer3 = `Stored in ${tableName}.${primaryCol.toUpperCase()}. `;
+                const columnName = term.toUpperCase().replace(/\s+/g, '_');
+                layer3 = `Stored in ${tableName}.${columnName}. `;
 
                 if (lowerTerm.includes('number') || lowerTerm.includes('id')) {
                     layer3 += `Referenced by multiple tables as a foreign key for establishing relationships.`;
@@ -845,7 +853,7 @@
             return 'the event is recorded in the system';
         }
 
-        function generateSynonyms(term, columns) {
+        function generateSynonyms(term) {
             const synonyms = [];
             const lowerTerm = term.toLowerCase();
 
@@ -859,7 +867,7 @@
             return synonyms;
         }
 
-        function generateAllowedValues(term, columns) {
+        function generateAllowedValues(term) {
             const lowerTerm = term.toLowerCase();
 
             // Return allowed values for status/state fields
@@ -973,12 +981,11 @@
                     `;
                 }
 
-                // Associated Columns
-                if (item.associated_columns) {
-                    const columns = item.associated_columns.split('|');
+                // Original Term
+                if (item.original_term) {
                     infoHTML += `
                         <div class="info-item">
-                            <strong>Associated Database Columns:</strong> ${columns.map(c => `<code>${escapeHtml(c)}</code>`).join(', ')}
+                            <strong>Original Term:</strong> <code>${escapeHtml(item.original_term)}</code>
                         </div>
                     `;
                 }
@@ -1001,7 +1008,7 @@
                 'Synonyms',
                 'Allowed Values',
                 'Data Domain',
-                'Associated Database Columns'
+                'Original Term'
             ];
 
             const rows = glossary.map(item => [
@@ -1012,7 +1019,7 @@
                 (item.synonyms || []).join('; '),
                 (item.allowed_values || []).join('; '),
                 item.data_domain || '',
-                item.associated_columns || ''
+                item.original_term || ''
             ]);
 
             const csvRows = [headers, ...rows].map(row =>

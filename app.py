@@ -33,64 +33,93 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
-def extract_column_names(filepath) -> List[str]:
-    """Extract database column names from uploaded file"""
+def extract_terms_from_file(filepath) -> List[str]:
+    """Extract business terms from uploaded file (line items, not headers)"""
     _, ext = os.path.splitext(filepath)
     ext = ext.lower()
 
     try:
         if ext == '.csv':
-            df = pd.read_csv(filepath, nrows=0)  # Read only headers
-            return df.columns.tolist()
+            df = pd.read_csv(filepath)
+            # If there's a column named 'term', 'business_term', or 'name', use that
+            # Otherwise, use the first column
+            if 'term' in df.columns:
+                terms = df['term'].dropna().astype(str).tolist()
+            elif 'business_term' in df.columns:
+                terms = df['business_term'].dropna().astype(str).tolist()
+            elif 'name' in df.columns:
+                terms = df['name'].dropna().astype(str).tolist()
+            else:
+                # Use first column
+                terms = df.iloc[:, 0].dropna().astype(str).tolist()
+            return [t.strip() for t in terms if t.strip()]
         elif ext in ['.xlsx', '.xls']:
-            df = pd.read_excel(filepath, nrows=0)  # Read only headers
-            return df.columns.tolist()
+            df = pd.read_excel(filepath)
+            # Same logic as CSV
+            if 'term' in df.columns:
+                terms = df['term'].dropna().astype(str).tolist()
+            elif 'business_term' in df.columns:
+                terms = df['business_term'].dropna().astype(str).tolist()
+            elif 'name' in df.columns:
+                terms = df['name'].dropna().astype(str).tolist()
+            else:
+                # Use first column
+                terms = df.iloc[:, 0].dropna().astype(str).tolist()
+            return [t.strip() for t in terms if t.strip()]
         elif ext == '.json':
             with open(filepath, 'r', encoding='utf-8') as f:
                 data = json.load(f)
-                if isinstance(data, list) and len(data) > 0:
-                    return list(data[0].keys())
-                elif isinstance(data, dict):
-                    return list(data.keys())
+                if isinstance(data, list):
+                    # If it's a list of strings, use them directly
+                    if all(isinstance(item, str) for item in data):
+                        return [item.strip() for item in data if item.strip()]
+                    # If it's a list of objects, look for 'term', 'business_term', or 'name' field
+                    elif all(isinstance(item, dict) for item in data):
+                        if 'term' in data[0]:
+                            return [item['term'].strip() for item in data if 'term' in item and item['term']]
+                        elif 'business_term' in data[0]:
+                            return [item['business_term'].strip() for item in data if 'business_term' in item and item['business_term']]
+                        elif 'name' in data[0]:
+                            return [item['name'].strip() for item in data if 'name' in item and item['name']]
                 return []
         elif ext == '.txt':
             with open(filepath, 'r', encoding='utf-8') as f:
-                # Assume each line is a column name
+                # Each line is a business term
                 return [line.strip() for line in f.readlines() if line.strip()]
         else:
             return []
     except Exception as e:
-        print(f"Error extracting column names: {e}")
+        print(f"Error extracting terms from file: {e}")
         return []
 
-def deduplicate_columns(columns: List[str]) -> Tuple[List[str], Dict[str, List[str]]]:
+def deduplicate_terms(terms: List[str]) -> Tuple[List[str], Dict[str, List[str]]]:
     """
-    Deduplicate column names and group similar ones.
+    Deduplicate business terms and group similar ones.
     Returns: (deduplicated_list, duplicates_map)
     """
     seen = {}
     deduplicated = []
     duplicates_map = {}
 
-    for col in columns:
-        # Normalize the column name for comparison
-        normalized = col.lower().replace('_', '').replace('-', '').replace(' ', '')
+    for term in terms:
+        # Normalize the term for comparison
+        normalized = term.lower().replace('_', '').replace('-', '').replace(' ', '').replace('.', '')
 
         if normalized not in seen:
-            seen[normalized] = col
-            deduplicated.append(col)
+            seen[normalized] = term
+            deduplicated.append(term)
         else:
             # Track duplicates
             original = seen[normalized]
             if original not in duplicates_map:
                 duplicates_map[original] = []
-            duplicates_map[original].append(col)
+            duplicates_map[original].append(term)
 
     return deduplicated, duplicates_map
 
-def identify_abbreviations(columns: List[str]) -> List[Dict[str, Any]]:
+def identify_abbreviations(terms: List[str]) -> List[Dict[str, Any]]:
     """
-    Identify abbreviations that might need clarification.
+    Identify abbreviations in business terms that might need clarification.
     Returns list of abbreviations with possible meanings.
     """
     # Common insurance abbreviations that might be ambiguous
@@ -125,9 +154,9 @@ def identify_abbreviations(columns: List[str]) -> List[Dict[str, Any]]:
 
     clarifications_needed = []
 
-    for col in columns:
+    for term in terms:
         # Split by common delimiters
-        parts = re.split(r'[_\-\s.]+', col.upper())
+        parts = re.split(r'[_\-\s.]+', term.upper())
 
         for part in parts:
             if part in ambiguous_abbrevs and len(ambiguous_abbrevs[part]) > 1:
@@ -136,12 +165,12 @@ def identify_abbreviations(columns: List[str]) -> List[Dict[str, Any]]:
                     clarifications_needed.append({
                         'abbreviation': part,
                         'possible_meanings': ambiguous_abbrevs[part],
-                        'example_columns': [c for c in columns if part in c.upper()][:3]
+                        'example_terms': [t for t in terms if part in t.upper()][:3]
                     })
 
     return clarifications_needed
 
-def generate_glossary_with_claude(columns: List[str], abbreviation_clarifications: Dict[str, str]) -> List[Dict[str, Any]]:
+def generate_glossary_with_claude(terms: List[str], abbreviation_clarifications: Dict[str, str]) -> List[Dict[str, Any]]:
     """
     Generate business glossary using Claude API with three-layer definition structure
     """
@@ -160,22 +189,17 @@ def generate_glossary_with_claude(columns: List[str], abbreviation_clarification
             for abbrev, meaning in abbreviation_clarifications.items():
                 clarifications_text += f"- {abbrev}: {meaning}\n"
 
-        prompt = f"""You are an expert insurance data analyst creating a comprehensive business glossary from database column names.
+        prompt = f"""You are an expert insurance data analyst creating a comprehensive business glossary.
 
 You are building a universal translator that works for claims adjusters, data engineers, and AI agents processing insurance data.
 
-## Database Columns to Analyze:
-{json.dumps(columns, indent=2)}
+## Business Terms to Define:
+{json.dumps(terms, indent=2)}
 {clarifications_text}
 
 ## Your Task:
 
-1. **Group related database columns** into abstract business terms
-   - Do NOT create one-to-one mappings
-   - Group similar columns (e.g., policy_number, pol_num, policy_id → "Policy Number")
-   - Use standard insurance industry terminology
-
-2. **For each business term, provide a THREE-LAYER DEFINITION**:
+1. **For each business term provided, create a THREE-LAYER DEFINITION**:
 
 ### Layer 1: Business Definition (Required, 1-2 sentences)
 - Plain language explanation understandable to non-technical stakeholders
@@ -233,18 +257,18 @@ You are building a universal translator that works for claims adjusters, data en
   "synonyms": ["Out-of-pocket minimum"],
   "allowed_values": null,
   "data_domain": "Policy",
-  "associated_columns": "deductible|deductible_amt|ded_amt"
+  "original_term": "Deductible"
 }}
 
 Return the results as a JSON array with these exact keys:
-- business_term (string)
+- business_term (string) - The standardized/cleaned term name
 - business_definition (string, required)
 - business_context (string, required)
 - technical_bridge (string or null)
 - synonyms (array of strings, empty array if none)
 - allowed_values (array of strings or null, for coded fields)
 - data_domain (string, one of the 8 domains)
-- associated_columns (string, pipe-separated)
+- original_term (string) - The original term from the input list
 
 Return ONLY the JSON array, no additional text."""
 
@@ -281,7 +305,7 @@ def generate_sample_insurance_glossary() -> List[Dict[str, Any]]:
             "synonyms": ["Policy ID", "Contract Number"],
             "allowed_values": None,
             "data_domain": "Policy",
-            "associated_columns": "policy_number|pol_num|policy_id|pol_no"
+            "original_term": "Policy Number"
         },
         {
             "business_term": "Claim Amount",
@@ -291,7 +315,7 @@ def generate_sample_insurance_glossary() -> List[Dict[str, Any]]:
             "synonyms": ["Settlement Amount", "Claim Payment", "Loss Amount"],
             "allowed_values": None,
             "data_domain": "Claims",
-            "associated_columns": "claim_amount|claim_amt|settlement_amount|paid_amount"
+            "original_term": "Claim Amount"
         },
         {
             "business_term": "Premium Amount",
@@ -301,7 +325,7 @@ def generate_sample_insurance_glossary() -> List[Dict[str, Any]]:
             "synonyms": ["Insurance Premium", "Policy Premium", "Premium Charge"],
             "allowed_values": None,
             "data_domain": "Finance",
-            "associated_columns": "premium_amount|premium_amt|policy_premium|prem_amt"
+            "original_term": "Premium Amount"
         },
         {
             "business_term": "Policy Status",
@@ -311,7 +335,7 @@ def generate_sample_insurance_glossary() -> List[Dict[str, Any]]:
             "synonyms": ["Coverage Status", "Policy State"],
             "allowed_values": ["active", "pending", "lapsed", "cancelled", "expired", "suspended"],
             "data_domain": "Policy",
-            "associated_columns": "policy_status|status|policy_state|coverage_status"
+            "original_term": "Policy Status"
         },
         {
             "business_term": "Loss Ratio",
@@ -321,7 +345,7 @@ def generate_sample_insurance_glossary() -> List[Dict[str, Any]]:
             "synonyms": ["Claims Ratio", "Loss Cost Ratio"],
             "allowed_values": None,
             "data_domain": "Finance",
-            "associated_columns": "loss_ratio|claims_ratio|loss_pct"
+            "original_term": "Loss Ratio"
         }
     ]
 
@@ -343,7 +367,7 @@ def create_xlsx_file(glossary_data: List[Dict[str, Any]], filename: str) -> str:
         "Synonyms",
         "Allowed Values",
         "Data Domain",
-        "Associated Database Columns"
+        "Original Term"
     ]
 
     # Style for headers
@@ -413,9 +437,9 @@ def create_xlsx_file(glossary_data: List[Dict[str, Any]], filename: str) -> str:
         cell.value = entry.get('data_domain', '')
         cell.border = thin_border
 
-        # Associated Columns
+        # Original Term
         cell = ws.cell(row=row_num, column=8)
-        cell.value = entry.get('associated_columns', '')
+        cell.value = entry.get('original_term', '')
         cell.alignment = Alignment(wrap_text=True, vertical="top")
         cell.border = thin_border
 
@@ -427,7 +451,7 @@ def create_xlsx_file(glossary_data: List[Dict[str, Any]], filename: str) -> str:
     ws.column_dimensions['E'].width = 25  # Synonyms
     ws.column_dimensions['F'].width = 30  # Allowed Values
     ws.column_dimensions['G'].width = 15  # Data Domain
-    ws.column_dimensions['H'].width = 40  # Associated Columns
+    ws.column_dimensions['H'].width = 25  # Original Term
 
     # Set row height for header
     ws.row_dimensions[1].height = 30
@@ -447,7 +471,7 @@ def index():
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
-    """Step 1: Upload file and return deduplicated columns with abbreviations"""
+    """Step 1: Upload file and return deduplicated business terms with abbreviations"""
     if 'file' not in request.files:
         return jsonify({'error': 'No file provided'}), 400
 
@@ -461,28 +485,28 @@ def upload_file():
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
 
-        # Extract column names
-        columns = extract_column_names(filepath)
+        # Extract business terms from file (line items, not headers)
+        terms = extract_terms_from_file(filepath)
 
-        if not columns:
+        if not terms:
             os.remove(filepath)
-            return jsonify({'error': 'No columns found in file'}), 400
+            return jsonify({'error': 'No terms found in file'}), 400
 
         # Deduplicate
-        deduplicated_columns, duplicates_map = deduplicate_columns(columns)
+        deduplicated_terms, duplicates_map = deduplicate_terms(terms)
 
         # Identify abbreviations needing clarification
-        abbreviations = identify_abbreviations(deduplicated_columns)
+        abbreviations = identify_abbreviations(deduplicated_terms)
 
         # Clean up uploaded file
         os.remove(filepath)
 
         return jsonify({
             'success': True,
-            'columns': deduplicated_columns,
-            'total_columns': len(columns),
-            'deduplicated_count': len(deduplicated_columns),
-            'duplicates_removed': len(columns) - len(deduplicated_columns),
+            'columns': deduplicated_terms,  # Keep 'columns' key for frontend compatibility
+            'total_columns': len(terms),
+            'deduplicated_count': len(deduplicated_terms),
+            'duplicates_removed': len(terms) - len(deduplicated_terms),
             'abbreviations': abbreviations,
             'duplicates_map': duplicates_map
         })
@@ -493,14 +517,14 @@ def upload_file():
 def generate_glossary():
     """Step 2: Generate glossary with abbreviation clarifications"""
     data = request.json
-    columns = data.get('columns', [])
+    terms = data.get('columns', [])  # Frontend sends 'columns' but they are actually business terms
     abbreviation_clarifications = data.get('clarifications', {})
 
-    if not columns:
-        return jsonify({'error': 'No columns provided'}), 400
+    if not terms:
+        return jsonify({'error': 'No terms provided'}), 400
 
     # Generate glossary
-    glossary = generate_glossary_with_claude(columns, abbreviation_clarifications)
+    glossary = generate_glossary_with_claude(terms, abbreviation_clarifications)
 
     # Sort by business term
     glossary = sorted(glossary, key=lambda x: x.get('business_term', ''))
