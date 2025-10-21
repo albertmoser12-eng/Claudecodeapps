@@ -1,0 +1,70 @@
+[
+  {
+    "term": "Authentication",
+    "description": "Process of verifying the identity of a user or system",
+    "examples": "Username/password login, Multi-factor authentication (MFA), Biometric verification",
+    "data_type": "Process/Workflow",
+    "technical_aliases": "authn, auth, user_authentication",
+    "synonyms": "User Verification, Identity Verification, Login Authentication",
+    "business_logic": "Required before granting system access; supports multiple methods (password, MFA, SSO)"
+  },
+  {
+    "term": "Authorization",
+    "description": "Process of determining what resources a user can access",
+    "examples": "Role-based access control (RBAC), Permission levels (read/write/admin)",
+    "data_type": "Process/Workflow",
+    "technical_aliases": "authz, access_control, permissions",
+    "synonyms": "Access Control, Permission Management",
+    "business_logic": "Occurs after authentication; enforces least privilege principle"
+  },
+  {
+    "term": "API Key",
+    "description": "Unique identifier used to authenticate API requests",
+    "examples": "sk_live_abc123xyz, api_key_prod_789def",
+    "data_type": "String/VARCHAR",
+    "technical_aliases": "api_token, access_key, api_secret",
+    "synonyms": "API Token, Access Key, API Credential"
+  },
+  {
+    "term": "Rate Limit",
+    "description": "Maximum number of API requests allowed in a time period",
+    "examples": "100 requests per minute, 10000 requests per day",
+    "data_type": "Integer",
+    "technical_aliases": "throttle_limit, request_quota, api_limit",
+    "synonyms": "Request Quota, API Limit, Throttle Limit",
+    "logical_formula": "Max Requests / Time Window"
+  },
+  {
+    "term": "Cache Hit Ratio",
+    "description": "Percentage of requests served from cache versus total requests",
+    "examples": "85% cache hit ratio, 92% hit rate",
+    "data_type": "Percentage",
+    "technical_aliases": "cache_hit_pct, hit_rate, cache_efficiency",
+    "synonyms": "Cache Hit Rate, Cache Efficiency",
+    "logical_formula": "(Cache Hits / Total Requests) * 100"
+  },
+  {
+    "term": "Payload",
+    "description": "Data transmitted in an API request or response",
+    "examples": "JSON body: {\"user\": \"john\", \"age\": 30}, XML document",
+    "data_type": "Object/JSON",
+    "technical_aliases": "request_body, response_body, message_payload",
+    "synonyms": "Request Body, Message Body, Data Packet"
+  },
+  {
+    "term": "Endpoint",
+    "description": "Specific URL path where an API can be accessed",
+    "examples": "/api/users, /v1/products/{id}, /auth/login",
+    "data_type": "String/URL",
+    "technical_aliases": "api_endpoint, route, url_path",
+    "synonyms": "API Route, Service Endpoint, URL Path"
+  },
+  {
+    "term": "Webhook",
+    "description": "HTTP callback that sends real-time data when events occur",
+    "examples": "Payment completed webhook, User registration webhook",
+    "data_type": "String/URL",
+    "technical_aliases": "callback_url, event_notification, http_callback",
+    "synonyms": "HTTP Callback, Event Notification, Push Notification"
+  }
+]

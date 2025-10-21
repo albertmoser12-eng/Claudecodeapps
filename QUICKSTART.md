@@ -44,9 +44,13 @@ Click the "Generate Glossary" button. The application will:
 ## Example Files
 
 The `sample_data/` directory contains example files you can use to test:
-- `insurance_data.csv` - General insurance fields
-- `life_insurance_terms.txt` - Life insurance definitions
-- `it_systems.json` - IT system schema
+- `general_insurance_glossary.csv` - General insurance business terms
+- `life_insurance_glossary.csv` - Life insurance business terms
+- `it_glossary.csv` - IT business terms (CSV format)
+- `it_glossary.json` - IT business terms (JSON format)
+- `insurance_terms.txt` - Insurance terms (text format)
+
+Each file contains business terms as **line items** (rows), not data fields. Each row represents a term to be included in the glossary.
 
 ## AI-Powered Generation (Optional)
 

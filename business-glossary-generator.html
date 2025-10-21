@@ -587,20 +587,14 @@
             try {
                 if (fileType === 'csv') {
                     parsedData = parseCSV(content);
-                    // Extract field names and create glossary entries
-                    if (parsedData.headers && parsedData.headers.length > 0) {
-                        parsedData.headers.forEach((header, index) => {
-                            const sampleValues = parsedData.data.slice(0, 3).map(row => row[header]).filter(v => v).join(', ');
-                            terms.push({
-                                title: formatFieldName(header),
-                                description: generateDescription(header, context),
-                                examples: sampleValues || 'N/A',
-                                business_logic: generateBusinessLogic(header, context),
-                                data_type: inferDataType(header, parsedData.data),
-                                technical_aliases: generateAliases(header),
-                                synonyms: generateSynonyms(header),
-                                logical_formula: isMetric(header) ? generateFormula(header) : ''
-                            });
+                    // Extract LINE ITEMS (rows) and create glossary entries
+                    if (parsedData.data && parsedData.data.length > 0) {
+                        parsedData.data.forEach((row, index) => {
+                            // Try to extract term information from the row
+                            const termInfo = extractTermFromRow(row, parsedData.headers, context);
+                            if (termInfo) {
+                                terms.push(termInfo);
+                            }
                         });
                     }
                 } else if (fileType === 'json') {
@@ -622,6 +616,140 @@
             }
         }
 
+        // Extract term information from a data row
+        function extractTermFromRow(row, headers, context) {
+            // Look for common column patterns for term name
+            const nameColumns = ['term', 'title', 'name', 'field', 'metric', 'concept', 'item'];
+            const descColumns = ['description', 'definition', 'desc', 'meaning', 'explanation'];
+            const exampleColumns = ['example', 'examples', 'sample', 'samples', 'sample_value', 'sample_values'];
+            const logicColumns = ['logic', 'business_logic', 'rules', 'business_rules', 'validation'];
+            const typeColumns = ['type', 'data_type', 'datatype', 'format'];
+            const aliasColumns = ['alias', 'aliases', 'technical_alias', 'technical_aliases', 'alt_name'];
+            const synonymColumns = ['synonym', 'synonyms', 'alt_names', 'alternative_names'];
+            const formulaColumns = ['formula', 'calculation', 'logical_formula', 'calc'];
+
+            const lowerHeaders = headers.map(h => h.toLowerCase());
+
+            // Find the term name
+            let termName = '';
+            for (let col of nameColumns) {
+                const idx = lowerHeaders.indexOf(col);
+                if (idx !== -1 && row[headers[idx]]) {
+                    termName = row[headers[idx]];
+                    break;
+                }
+            }
+
+            // If no term name found, try the first column
+            if (!termName && row[headers[0]]) {
+                termName = row[headers[0]];
+            }
+
+            if (!termName) return null;
+
+            // Find description
+            let description = '';
+            for (let col of descColumns) {
+                const idx = lowerHeaders.indexOf(col);
+                if (idx !== -1 && row[headers[idx]]) {
+                    description = row[headers[idx]];
+                    break;
+                }
+            }
+            if (!description) {
+                description = generateDescription(termName, context);
+            }
+
+            // Find examples
+            let examples = '';
+            for (let col of exampleColumns) {
+                const idx = lowerHeaders.indexOf(col);
+                if (idx !== -1 && row[headers[idx]]) {
+                    examples = row[headers[idx]];
+                    break;
+                }
+            }
+            if (!examples) {
+                examples = generateExamples(termName, context);
+            }
+
+            // Find business logic
+            let businessLogic = '';
+            for (let col of logicColumns) {
+                const idx = lowerHeaders.indexOf(col);
+                if (idx !== -1 && row[headers[idx]]) {
+                    businessLogic = row[headers[idx]];
+                    break;
+                }
+            }
+            if (!businessLogic) {
+                businessLogic = generateBusinessLogic(termName, context);
+            }
+
+            // Find data type
+            let dataType = '';
+            for (let col of typeColumns) {
+                const idx = lowerHeaders.indexOf(col);
+                if (idx !== -1 && row[headers[idx]]) {
+                    dataType = row[headers[idx]];
+                    break;
+                }
+            }
+            if (!dataType) {
+                dataType = inferDataType(termName, [row]);
+            }
+
+            // Find technical aliases
+            let aliases = '';
+            for (let col of aliasColumns) {
+                const idx = lowerHeaders.indexOf(col);
+                if (idx !== -1 && row[headers[idx]]) {
+                    aliases = row[headers[idx]];
+                    break;
+                }
+            }
+            if (!aliases) {
+                aliases = generateAliases(termName);
+            }
+
+            // Find synonyms
+            let synonyms = '';
+            for (let col of synonymColumns) {
+                const idx = lowerHeaders.indexOf(col);
+                if (idx !== -1 && row[headers[idx]]) {
+                    synonyms = row[headers[idx]];
+                    break;
+                }
+            }
+            if (!synonyms) {
+                synonyms = generateSynonyms(termName);
+            }
+
+            // Find formula
+            let formula = '';
+            for (let col of formulaColumns) {
+                const idx = lowerHeaders.indexOf(col);
+                if (idx !== -1 && row[headers[idx]]) {
+                    formula = row[headers[idx]];
+                    break;
+                }
+            }
+            if (!formula && isMetric(termName)) {
+                formula = generateFormula(termName);
+            }
+
+            return {
+                title: termName,
+                description: description,
+                examples: examples,
+                business_logic: businessLogic,
+                data_type: dataType,
+                technical_aliases: aliases,
+                synonyms: synonyms,
+                logical_formula: formula
+            };
+        }
+
         // Helper functions
         function formatFieldName(name) {
             return name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
@@ -634,7 +762,13 @@
                 'date': 'Date timestamp for the record',
                 'amount': 'Monetary value or quantity',
                 'status': 'Current state or condition',
-                'type': 'Category or classification'
+                'type': 'Category or classification',
+                'premium': 'Amount paid for insurance coverage',
+                'claim': 'Request for payment under insurance policy',
+                'policy': 'Insurance contract or agreement',
+                'benefit': 'Payment or service provided',
+                'user': 'Person who uses the system',
+                'session': 'Period of active use'
             };
 
             const lowerField = fieldName.toLowerCase();
@@ -645,6 +779,16 @@
             }
 
             return `Business term representing ${fieldName.toLowerCase()} in the ${context} domain`;
+        }
+
+        function generateExamples(termName, context) {
+            const lowerTerm = termName.toLowerCase();
+            if (lowerTerm.includes('premium')) return 'Monthly premium: $150, Annual premium: $1,800';
+            if (lowerTerm.includes('claim')) return 'Auto claim: $5,000, Medical claim: $2,500';
+            if (lowerTerm.includes('policy')) return 'Policy #POL-2024-001, Term life policy';
+            if (lowerTerm.includes('user')) return 'user@example.com, USR-12345';
+            if (lowerTerm.includes('amount')) return '$1,000, $5,500, $10,000';
+            return 'See business documentation for specific examples';
         }
 
         function generateBusinessLogic(fieldName, context) {

@@ -21,17 +21,19 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
 def parse_file(filepath):
-    """Parse uploaded file and extract content"""
+    """Parse uploaded file and extract line items for glossary generation"""
     _, ext = os.path.splitext(filepath)
     ext = ext.lower()
 
     try:
         if ext == '.csv':
             df = pd.read_csv(filepath)
-            return df.to_string()
+            # Extract line items from the dataframe
+            return extract_line_items_from_dataframe(df)
         elif ext in ['.xlsx', '.xls']:
             df = pd.read_excel(filepath)
-            return df.to_string()
+            # Extract line items from the dataframe
+            return extract_line_items_from_dataframe(df)
         elif ext == '.json':
             with open(filepath, 'r', encoding='utf-8') as f:
                 data = json.load(f)
@@ -44,6 +46,36 @@ def parse_file(filepath):
     except Exception as e:
         print(f"Error parsing file: {e}")
         return None
+
+def extract_line_items_from_dataframe(df):
+    """
+    Extract line items from a dataframe for glossary generation.
+    Assumes the file contains business terms as rows with columns like:
+    - Term/Title/Name (the business term)
+    - Description/Definition (explanation)
+    - Other metadata columns
+    """
+    if df.empty:
+        return "No data found in file"
+
+    # Convert dataframe to a structured text format
+    result = []
+
+    # Get column names
+    columns = df.columns.tolist()
+
+    # Iterate through rows and format them as line items
+    for idx, row in df.iterrows():
+        item_parts = []
+        for col in columns:
+            value = row[col]
+            if pd.notna(value):  # Only include non-null values
+                item_parts.append(f"{col}: {value}")
+
+        if item_parts:
+            result.append("\n".join(item_parts))
+
+    return "\n\n---\n\n".join(result)
 
 def generate_glossary(file_content: str, business_context: str) -> List[Dict[str, Any]]:
     """
@@ -61,20 +93,24 @@ def generate_glossary(file_content: str, business_context: str) -> List[Dict[str
 
         prompt = f"""You are a business analyst expert specializing in {business_context}.
 
-Analyze the following data/document and extract business terms and business metrics to create a comprehensive business glossary.
+Analyze the following data containing business terms and metrics. Each item in the data represents a business term or metric.
+Create a comprehensive business glossary by enriching and standardizing each term.
 
-For each term or metric identified, provide:
-1. Title: The name of the business term or metric
-2. Description: Clear explanation of what it means
-3. Examples: Concrete examples of the term/metric in use
+For each term or metric in the data, provide:
+1. Title: The name of the business term or metric (extract from the data)
+2. Description: Clear, professional explanation of what it means (enhance if provided, or create if missing)
+3. Examples: Concrete examples of the term/metric in use (extract from data or generate relevant ones)
 4. Business Logic: The business rules or logic associated with it
-5. Data Type: The data type (string, number, date, boolean, etc.)
+5. Data Type: The data type (string, number, date, boolean, currency, etc.)
 6. Technical Aliases: Alternative technical names or database column names
 7. Synonyms: Other business names for the same concept
 8. Logical Formula: (For metrics only) The calculation formula
 
-Document content:
-{file_content[:4000]}
+IMPORTANT: Extract business terms from the LINE ITEMS in the data, not from column headers.
+Each line item represents a separate business term or concept.
+
+Data content:
+{file_content[:8000]}
 
 Please return the results in JSON format as an array of objects with these exact keys:
 - title

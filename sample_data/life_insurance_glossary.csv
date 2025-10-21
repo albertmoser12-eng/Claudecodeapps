@@ -1,0 +1,16 @@
+Term,Description,Examples,Data Type,Synonyms,Logical Formula
+Sum Assured,The guaranteed amount payable to beneficiaries upon death or maturity of the policy,Life cover: $500000; Term insurance: $1000000,Currency/Decimal,Death Benefit|Coverage Amount|Face Value,
+Premium,Periodic payment made by policyholder to keep the insurance policy active,Monthly: $200; Quarterly: $580; Annual: $2200,Currency/Decimal,Policy Payment|Insurance Premium,
+Surrender Value,Amount payable to policyholder if policy is terminated before maturity,After 5 years: $12000; After 10 years: $28000,Currency/Decimal,Cash Value|Termination Value,Total Premiums Paid - Surrender Charges - Admin Fees
+Maturity Date,Date when the policy term ends and benefits become payable,20-year policy started 2024: matures 2044,Date,Policy End Date|Maturity,
+Policy Term,Duration for which the insurance coverage is valid,10 years; 20 years; 30 years; Whole life,Integer/Years,Coverage Period|Policy Duration,
+Mortality Rate,Probability of death within a specified age group,Age 40-45: 0.002 (0.2%); Age 60-65: 0.015 (1.5%),Decimal/Percentage,Death Rate|Mortality Probability,Number of Deaths / Total Population in Age Group
+Bonus,Additional amount added to sum assured based on company performance,Annual bonus: $5000; Terminal bonus: $15000,Currency/Decimal,Policy Bonus|Profit Share,
+Paid-Up Value,Reduced sum assured that continues without further premium payments,Original SA: $100000; Paid-up: $45000 after 5 years,Currency/Decimal,Reduced Sum Assured,
+Free Look Period,Timeframe to cancel new policy and receive full premium refund,15 days; 30 days,Integer/Days,Cooling-off Period|Cancellation Period,
+Sum at Risk,Difference between sum assured and policy reserve,SA: $500000; Reserve: $150000; SAR: $350000,Currency/Decimal,Net Amount at Risk,Sum Assured - Policy Reserve
+Persistency Ratio,Percentage of policies that remain in force,88% persistency means 88 of 100 policies stayed active,Percentage,Retention Rate|Continuation Ratio,(Active Policies End / Policies Start) * 100
+New Business Premium,Total annualized premium from new policies sold in period,Q1 new business: $5M; Annual target: $25M,Currency,New Premium Income|Fresh Premium,
+Claim Settlement Ratio,Percentage of claims settled versus claims received,95% settlement; 98% settlement,Percentage,Settlement Rate|Approval Ratio,(Claims Settled / Total Claims) * 100
+Policy Reserve,Amount insurer must maintain to meet future policy obligations,Reserve for policy: $45000; Total reserves: $50M,Currency/Decimal,Mathematical Reserve|Policy Liability,
+Nominee,Person designated to receive policy benefits upon insured's death,Spouse; Children; Trust,String,Beneficiary|Designated Recipient,

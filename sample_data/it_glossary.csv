@@ -1,0 +1,16 @@
+Term,Description,Examples,Data Type,Technical Aliases,Synonyms,Logical Formula
+User ID,Unique identifier assigned to each system user,USR-123456; user@example.com; EMP001,String/VARCHAR,user_id|uid|username|login_id,Username|Login ID|Account ID,
+Session ID,Unique identifier for each user session,SESS-789012; sid_abc123xyz,String/VARCHAR,session_id|sess_id|sid,Session Key|Session Token,
+Session Duration,Length of time a user remains actively logged into the system,45 minutes; 2 hours 15 minutes,Integer/Minutes,session_time|login_duration|active_time,Login Duration|Active Time|Session Length,End Time - Start Time (in minutes)
+IP Address,Network address of the user's device,192.168.1.100; 10.0.0.25,String/VARCHAR(45),ip_addr|client_ip|remote_addr,Client IP|Network Address,
+Response Time,Time taken for system to respond to user request,250ms; 500ms; 1200ms,Integer/Milliseconds,response_time_ms|latency|rt,Latency|Request Time|API Response Time,Request End - Request Start
+CPU Usage,Percentage of CPU resources being utilized,45.67%; 78.23%,Decimal/Percentage,cpu_usage_pct|cpu_util|processor_load,CPU Utilization|Processor Usage,
+Memory Usage,Amount of RAM being consumed by the system,4096 MB; 8192 MB,Integer/Megabytes,memory_usage_mb|ram_usage|mem_used,RAM Usage|Memory Consumption,
+Active Connections,Number of concurrent database or network connections,125 connections; 450 connections,Integer,active_conn|connection_count|concurrent_connections,Connection Count|Active Sessions,
+System Uptime,Percentage of time system is operational and accessible,99.9%; 99.99%,Percentage,uptime_pct|availability|system_availability,Availability|Service Uptime,(Total Time - Downtime) / Total Time * 100
+Downtime,Period when system is unavailable,2 hours; 30 minutes,Integer/Minutes,outage_time|unavailable_time,Outage Duration|Unavailability,
+Daily Active Users,Count of unique users who logged in during a day,5420 users; 7890 users,Integer,dau|daily_users|active_user_count,DAU|Unique Daily Users,COUNT(DISTINCT user_id WHERE login_date = today)
+Request Count,Total number of API or system requests in time period,10000 requests/hour; 250000 requests/day,Integer,request_total|api_calls|req_count,API Calls|Request Total,
+Error Rate,Percentage of requests that result in errors,0.5%; 2.3%,Percentage,error_rate_pct|failure_rate,Failure Rate|Error Percentage,(Error Count / Total Requests) * 100
+Throughput,Number of transactions processed per unit time,1000 TPS; 5000 requests/second,Integer,tps|transactions_per_sec|req_per_sec,Transactions Per Second|Request Rate,
+Database Size,Total storage space consumed by database,50 GB; 500 GB; 2 TB,Integer/Gigabytes,db_size_gb|storage_used|data_size,Storage Size|DB Storage,

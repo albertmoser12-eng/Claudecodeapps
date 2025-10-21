@@ -1,0 +1,31 @@
+INSURANCE BUSINESS GLOSSARY TERMS
+
+Premium: The amount paid by the policyholder to the insurance company for coverage. Examples include monthly premiums of $150 or annual premiums of $1,800. Calculated based on risk assessment and coverage amount.
+
+Deductible: The amount the policyholder must pay out-of-pocket before the insurance coverage begins. Common examples are $500, $1,000, or $2,500 deductibles. Higher deductibles typically result in lower premiums.
+
+Claim: A formal request by a policyholder to an insurance company for coverage or compensation for a covered loss or policy event. Examples include auto accident claims, property damage claims, or medical expense claims.
+
+Underwriting: The process by which insurers evaluate the risk of insuring a client and determine appropriate premium rates. Involves assessment of application information, medical records, and risk factors.
+
+Policyholder: The person or entity that owns an insurance policy. May also be called the named insured or policy owner. Has rights to modify, cancel, or renew the policy.
+
+Beneficiary: The person or entity designated to receive insurance proceeds in the event of a claim. Common in life insurance policies where beneficiaries receive death benefits.
+
+Coverage Limit: The maximum amount an insurance company will pay for a covered loss. Example: A homeowner's policy with a $500,000 coverage limit will not pay more than this amount regardless of actual damages.
+
+Exclusion: Specific conditions or circumstances listed in the policy that are not covered. Common exclusions include acts of war, intentional damage, or pre-existing conditions.
+
+Rider: An amendment or addition to an insurance policy that provides additional benefits or modifies coverage. Examples include accidental death riders or waiver of premium riders.
+
+Loss Ratio: A financial metric calculated as the ratio of claims paid to premiums earned, expressed as a percentage. A loss ratio of 75% means the insurer paid $0.75 in claims for every $1.00 collected in premiums.
+
+Combined Ratio: The sum of the loss ratio and expense ratio, used to measure overall underwriting profitability. A combined ratio below 100% indicates underwriting profit.
+
+Reinsurance: Insurance purchased by insurance companies to transfer portions of their risk portfolios to other parties. Helps insurers manage risk and maintain solvency.
+
+Actuary: A professional who analyzes financial risk using mathematics, statistics, and financial theory. Actuaries calculate premiums, reserves, and ensure insurers maintain adequate capital.
+
+Reserve: Funds set aside by insurance companies to pay future claims. Required by regulation to ensure insurers can meet their obligations to policyholders.
+
+Grace Period: A set period of time after the premium due date during which payment can be made without policy lapse. Typically 30 days for most policies.

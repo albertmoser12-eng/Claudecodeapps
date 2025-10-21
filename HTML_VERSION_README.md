@@ -45,34 +45,49 @@ You can also host this file on any web server or upload it to a static hosting s
 
 ## Supported File Formats
 
-### CSV Files
-The app will extract column headers and generate glossary entries for each field.
+The app processes **line items** (rows/entries) from your files, where each item represents a business term.
+
+### CSV Files (Recommended)
+Each row represents a business term with columns for term attributes.
 
 Example:
 ```csv
-policy_number,premium_amount,coverage_limit
-POL-001,1500.00,500000
+Term,Description,Examples,Data Type
+Premium,Amount paid for insurance,Monthly: $150,Currency
+Claim,Request for payment,Auto claim: $5000,Currency
 ```
 
+The app intelligently maps columns like:
+- **Term/Title/Name** → Business term name
+- **Description/Definition** → Term explanation
+- **Examples** → Sample values
+- **Data Type** → Technical type
+- **Aliases/Technical Aliases** → Alternative names
+- **Synonyms** → Business synonyms
+- **Formula/Logical Formula** → Calculation (for metrics)
+
 ### JSON Files
-The app will traverse the JSON structure and extract field definitions.
+Array of term objects or nested structure.
 
 Example:
 ```json
-{
-  "user_id": {
-    "description": "Unique user identifier",
-    "type": "VARCHAR(50)",
-    "example": "USR-123"
+[
+  {
+    "term": "Premium",
+    "description": "Amount paid for insurance",
+    "examples": "Monthly: $150"
   }
-}
+]
 ```
 
 ### Text Files
-The app will look for term definitions in the format:
+Each paragraph or line represents a term with pattern "Term: Description".
+
+Example:
 ```
-Term Name: Description of the term
-Another Term - Description here
+Premium: The amount paid by the policyholder for insurance coverage.
+
+Claim: A formal request for payment under the insurance policy.
 ```
 
 ## How It Works
