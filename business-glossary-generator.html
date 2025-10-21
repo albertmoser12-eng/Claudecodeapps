@@ -378,6 +378,8 @@
                     <thead>
                         <tr>
                             <th>Title</th>
+                            <th>Term Type</th>
+                            <th>Data Domain</th>
                             <th>Description</th>
                             <th>Examples</th>
                             <th>Business Logic</th>
@@ -400,6 +402,8 @@
             "General Insurance": [
                 {
                     "title": "Premium",
+                    "term_type": "Business term",
+                    "data_domain": "Financial",
                     "description": "The amount paid by the policyholder to the insurance company for coverage",
                     "examples": "Monthly premium: $150, Annual premium: $1,800",
                     "business_logic": "Calculated based on risk factors, coverage amount, and policy term",
@@ -410,6 +414,8 @@
                 },
                 {
                     "title": "Claim Amount",
+                    "term_type": "Business term",
+                    "data_domain": "Claim",
                     "description": "The monetary value requested or paid for an insurance claim",
                     "examples": "Claim for vehicle damage: $5,000, Medical claim: $2,500",
                     "business_logic": "Must not exceed policy coverage limits; subject to deductibles",
@@ -420,6 +426,8 @@
                 },
                 {
                     "title": "Loss Ratio",
+                    "term_type": "Business metric",
+                    "data_domain": "Financial",
                     "description": "The ratio of claims paid to premiums earned",
                     "examples": "Loss Ratio of 0.75 means 75% of premiums are paid out as claims",
                     "business_logic": "Used to measure profitability and pricing adequacy of insurance products",
@@ -430,6 +438,8 @@
                 },
                 {
                     "title": "Deductible",
+                    "term_type": "Business term",
+                    "data_domain": "Policy",
                     "description": "The amount the policyholder must pay before insurance coverage begins",
                     "examples": "$500 deductible, $1,000 deductible",
                     "business_logic": "Higher deductibles typically result in lower premiums",
@@ -442,6 +452,8 @@
             "Life Insurance": [
                 {
                     "title": "Sum Assured",
+                    "term_type": "Business term",
+                    "data_domain": "Policy",
                     "description": "The guaranteed amount payable to beneficiaries upon death or maturity",
                     "examples": "Life cover: $500,000, Term insurance sum assured: $1,000,000",
                     "business_logic": "Determined at policy inception based on income, needs, and underwriting",
@@ -452,6 +464,8 @@
                 },
                 {
                     "title": "Surrender Value",
+                    "term_type": "Business metric",
+                    "data_domain": "Financial",
                     "description": "The amount payable to the policyholder if the policy is terminated before maturity",
                     "examples": "After 5 years, surrender value: $12,000",
                     "business_logic": "Calculated based on premiums paid, policy duration, and surrender charges",
@@ -462,6 +476,8 @@
                 },
                 {
                     "title": "Mortality Rate",
+                    "term_type": "Business metric",
+                    "data_domain": "Actuarial",
                     "description": "The probability of death within a specified age group",
                     "examples": "Mortality rate for age 40-45: 0.002 (0.2%)",
                     "business_logic": "Used for premium calculation and reserves estimation",
@@ -472,6 +488,8 @@
                 },
                 {
                     "title": "Policy Term",
+                    "term_type": "Business term",
+                    "data_domain": "Policy",
                     "description": "The duration for which the insurance coverage is valid",
                     "examples": "20-year term, 30-year term, Whole life (lifetime)",
                     "business_logic": "Defines the period of coverage and premium payment duration",
@@ -484,6 +502,8 @@
             "Information Technology": [
                 {
                     "title": "User ID",
+                    "term_type": "Business term",
+                    "data_domain": "User Management",
                     "description": "Unique identifier assigned to each system user",
                     "examples": "U123456, user@example.com, EMP001",
                     "business_logic": "Must be unique across the system; used for authentication and audit trails",
@@ -494,6 +514,8 @@
                 },
                 {
                     "title": "Session Duration",
+                    "term_type": "Business term",
+                    "data_domain": "Security",
                     "description": "The length of time a user remains actively logged into the system",
                     "examples": "Average session: 45 minutes, Timeout: 30 minutes",
                     "business_logic": "Tracked for security and usage analytics; sessions expire after inactivity",
@@ -504,6 +526,8 @@
                 },
                 {
                     "title": "System Uptime",
+                    "term_type": "Business metric",
+                    "data_domain": "Infrastructure",
                     "description": "Percentage of time the system is operational and accessible",
                     "examples": "99.9% uptime, 99.99% availability",
                     "business_logic": "Calculated excluding planned maintenance; key SLA metric",
@@ -514,6 +538,8 @@
                 },
                 {
                     "title": "Response Time",
+                    "term_type": "Business metric",
+                    "data_domain": "Performance",
                     "description": "Time taken for the system to respond to a user request",
                     "examples": "Average response time: 250ms, Peak: 500ms",
                     "business_logic": "Key performance indicator; should be minimized for better user experience",
@@ -739,7 +765,9 @@
             }
 
             return {
-                title: termName,
+                title: formatBusinessTitle(termName),
+                term_type: determineTermType(termName, formula),
+                data_domain: assignDataDomain(termName, context),
                 description: description,
                 examples: examples,
                 business_logic: businessLogic,
@@ -753,6 +781,50 @@
         // Helper functions
         function formatFieldName(name) {
             return name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+
+        function formatBusinessTitle(name) {
+            // Convert to business-oriented title (typically 2 words, no underscores)
+            return name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()).trim();
+        }
+
+        function determineTermType(termName, formula) {
+            // Classify as "Business term" or "Business metric"
+            const lowerTerm = termName.toLowerCase();
+            const metricKeywords = ['ratio', 'rate', 'percentage', 'count', 'total', 'number', 'sum', 'average', 'mean', 'duration', 'time', 'uptime'];
+
+            if (formula) return 'Business metric';  // Has formula = metric
+            if (metricKeywords.some(keyword => lowerTerm.includes(keyword))) return 'Business metric';
+            return 'Business term';
+        }
+
+        function assignDataDomain(termName, context) {
+            // Assign context-specific data domain
+            const lowerTerm = termName.toLowerCase();
+
+            if (context === 'General Insurance') {
+                if (lowerTerm.includes('claim')) return 'Claim';
+                if (lowerTerm.includes('policy') || lowerTerm.includes('coverage')) return 'Policy';
+                if (lowerTerm.includes('customer') || lowerTerm.includes('holder')) return 'Customer';
+                if (lowerTerm.includes('premium') || lowerTerm.includes('financial') || lowerTerm.includes('ratio')) return 'Financial';
+                if (lowerTerm.includes('risk') || lowerTerm.includes('underwriting')) return 'Underwriting';
+                return 'Policy';
+            } else if (context === 'Life Insurance') {
+                if (lowerTerm.includes('policy') || lowerTerm.includes('term') || lowerTerm.includes('assured')) return 'Policy';
+                if (lowerTerm.includes('customer') || lowerTerm.includes('holder') || lowerTerm.includes('insured')) return 'Customer';
+                if (lowerTerm.includes('premium') || lowerTerm.includes('value') || lowerTerm.includes('financial') || lowerTerm.includes('ratio')) return 'Financial';
+                if (lowerTerm.includes('mortality') || lowerTerm.includes('actuarial')) return 'Actuarial';
+                if (lowerTerm.includes('benefit') || lowerTerm.includes('maturity')) return 'Benefits';
+                return 'Policy';
+            } else { // Information Technology
+                if (lowerTerm.includes('user') || lowerTerm.includes('login') || lowerTerm.includes('account')) return 'User Management';
+                if (lowerTerm.includes('session') || lowerTerm.includes('auth') || lowerTerm.includes('security')) return 'Security';
+                if (lowerTerm.includes('response') || lowerTerm.includes('latency') || lowerTerm.includes('performance') || lowerTerm.includes('cpu') || lowerTerm.includes('memory')) return 'Performance';
+                if (lowerTerm.includes('uptime') || lowerTerm.includes('availability') || lowerTerm.includes('infrastructure') || lowerTerm.includes('server')) return 'Infrastructure';
+                if (lowerTerm.includes('api') || lowerTerm.includes('application') || lowerTerm.includes('endpoint')) return 'Application';
+                if (lowerTerm.includes('data') || lowerTerm.includes('database') || lowerTerm.includes('storage')) return 'Data';
+                return 'Application';
+            }
         }
 
         function generateDescription(fieldName, context) {
@@ -1154,6 +1226,8 @@
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td><strong>${escapeHtml(item.title)}</strong></td>
+                    <td>${escapeHtml(item.term_type || 'Business term')}</td>
+                    <td>${escapeHtml(item.data_domain || 'General')}</td>
                     <td>${escapeHtml(item.description)}</td>
                     <td>${escapeHtml(item.examples)}</td>
                     <td>${escapeHtml(item.business_logic)}</td>
@@ -1192,13 +1266,15 @@
                 return;
             }
 
-            const headers = ['Title', 'Description', 'Examples', 'Business Logic', 'Data Type', 'Technical Aliases', 'Synonyms', 'Logical Formula'];
+            const headers = ['Title', 'Term Type', 'Data Domain', 'Description', 'Examples', 'Business Logic', 'Data Type', 'Technical Aliases', 'Synonyms', 'Logical Formula'];
 
             let csv = headers.join(',') + '\n';
 
             currentGlossaryData.forEach(item => {
                 const row = [
                     item.title,
+                    item.term_type || 'Business term',
+                    item.data_domain || 'General',
                     item.description,
                     item.examples,
                     item.business_logic,

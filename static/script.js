@@ -73,6 +73,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td><strong>${escapeHtml(item.title)}</strong></td>
+                <td>${escapeHtml(item.term_type || 'Business term')}</td>
+                <td>${escapeHtml(item.data_domain || 'General')}</td>
                 <td>${escapeHtml(item.description)}</td>
                 <td>${escapeHtml(item.examples)}</td>
                 <td>${escapeHtml(item.business_logic)}</td>
@@ -105,13 +107,15 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        const headers = ['Title', 'Description', 'Examples', 'Business Logic', 'Data Type', 'Technical Aliases', 'Synonyms', 'Logical Formula'];
+        const headers = ['Title', 'Term Type', 'Data Domain', 'Description', 'Examples', 'Business Logic', 'Data Type', 'Technical Aliases', 'Synonyms', 'Logical Formula'];
 
         let csv = headers.join(',') + '\n';
 
         currentGlossaryData.forEach(item => {
             const row = [
                 item.title,
+                item.term_type || 'Business term',
+                item.data_domain || 'General',
                 item.description,
                 item.examples,
                 item.business_logic,
