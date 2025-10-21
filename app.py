@@ -9,7 +9,7 @@ from typing import List, Dict, Any, Tuple
 import anthropic
 from datetime import datetime
 from openpyxl import Workbook
-from openpyxl.styles import Font, PatternFill, Alignment
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 import io
 
@@ -143,7 +143,7 @@ def identify_abbreviations(columns: List[str]) -> List[Dict[str, Any]]:
 
 def generate_glossary_with_claude(columns: List[str], abbreviation_clarifications: Dict[str, str]) -> List[Dict[str, Any]]:
     """
-    Generate business glossary using Claude API following the 6-step process
+    Generate business glossary using Claude API with three-layer definition structure
     """
     api_key = os.environ.get('ANTHROPIC_API_KEY')
 
@@ -162,51 +162,89 @@ def generate_glossary_with_claude(columns: List[str], abbreviation_clarification
 
         prompt = f"""You are an expert insurance data analyst creating a comprehensive business glossary from database column names.
 
-Follow these steps systematically:
+You are building a universal translator that works for claims adjusters, data engineers, and AI agents processing insurance data.
 
-## Step 1: Data Preparation and Deduplication
-The column names have already been deduplicated. Here are the database columns to analyze:
+## Database Columns to Analyze:
 {json.dumps(columns, indent=2)}
 {clarifications_text}
 
-## Step 2-6: Generate Business Glossary
+## Your Task:
 
-Your task is to:
-1. Review the database column names
-2. Classify each column into one of these 8 insurance data domains:
-   - **Claims**: Data related to insurance claims, settlements, adjustments, and claim processing
-   - **Policy**: Information about insurance policies, coverage, premiums, and policy administration
-   - **Risk**: Data concerning risk assessment, underwriting, exposures, and risk management
-   - **Customer**: Personal and business information about policyholders and insureds
-   - **Broker**: Information about insurance brokers, their relationships, and transactions
-   - **Agent**: Data about insurance agents, their performance, and client relationships
-   - **Finance**: Financial data including payments, accounting, billing, and financial reporting
-   - **HR**: Human resources data for employees, payroll, and organizational structure
-
-3. Create ABSTRACT BUSINESS TERMS by grouping related database columns:
-   - **Do NOT create one-to-one mappings** between columns and business terms
-   - Instead, group related columns under broader business concepts
+1. **Group related database columns** into abstract business terms
+   - Do NOT create one-to-one mappings
+   - Group similar columns (e.g., policy_number, pol_num, policy_id → "Policy Number")
    - Use standard insurance industry terminology
-   - Focus on business meaning, not technical implementation
 
-4. For each business term, provide:
-   - **Business Term**: Clear, concise insurance industry term (use natural language, 2-4 words)
-   - **Description**: Business-focused definition (maximum 50 words) explaining the concept's relevance to insurance operations
-   - **Data Domain**: One of the 8 specified domains
-   - **Associated Database Columns**: List of database columns that relate to this business term (pipe-separated)
+2. **For each business term, provide a THREE-LAYER DEFINITION**:
 
-## Quality Standards:
-- Descriptions must be business-friendly, avoiding technical jargon
-- Focus on "what" and "why" rather than "how"
-- Use active voice and clear language
-- Ensure consistency in terminology across all entries
-- Group related columns together (e.g., policy_number, pol_num, policy_id → "Policy Number")
+### Layer 1: Business Definition (Required, 1-2 sentences)
+- Plain language explanation understandable to non-technical stakeholders
+- Start with what the term IS before explaining what it does
+- Use consistent patterns:
+  * Person/Entity: "The [person/organization] who/that [role/function]..."
+  * Date: "The date when [specific event occurs]..."
+  * Amount: "The [monetary value/quantity] of [what it measures]..."
+  * Status: "The current state of [entity] indicating [meaning]..."
+- NO circular definitions (e.g., "Premium Amount: The amount of the premium")
+- NO undefined acronyms
 
-Return the results in JSON format as an array of objects with these exact keys:
-- business_term
-- description
-- data_domain
-- associated_columns (pipe-separated string)
+### Layer 2: Business Context (Required, 2-3 sentences)
+- Why does this matter? How is it used in business processes?
+- What decisions depend on it?
+- Include relationships to other concepts
+- Include cardinality when relevant (one-to-one, one-to-many, etc.)
+- Distinguish between events (real-world) and records (system entries)
+- For temporal data, be explicit about "as of when"
+
+### Layer 3: Technical Bridge (Optional, 1-2 sentences)
+- Only include if the term is frequently used in technical work
+- Format: "Stored in [TABLE.COLUMN]. Related to [OTHER_TABLES]."
+- Note whether values are stored directly or calculated
+
+3. **Additional Fields**:
+- **Synonyms**: List alternative terms (if applicable)
+- **Allowed Values**: For coded/status fields, list valid values
+- **Data Domain**: One of these 8 insurance domains:
+  * Claims: Data related to insurance claims, settlements, adjustments
+  * Policy: Information about policies, coverage, premiums
+  * Risk: Risk assessment, underwriting, exposures
+  * Customer: Personal and business information about policyholders
+  * Broker: Information about brokers and their relationships
+  * Agent: Data about agents, performance, relationships
+  * Finance: Financial data, payments, accounting, billing
+  * HR: Human resources, employees, payroll
+
+## Quality Checklist - Ensure Each Definition:
+✓ First sentence understandable to non-insurance person
+✓ No circular definitions
+✓ No unexplained acronyms
+✓ Terms defined without requiring other term lookups first
+✓ Scope and boundaries are clear
+✓ Dates specify exactly which event they represent
+✓ Relationships and cardinality mentioned when relevant
+
+## Example Output Format:
+
+{{
+  "business_term": "Deductible",
+  "business_definition": "The amount a policyholder must pay out-of-pocket before insurance coverage begins paying for a covered loss.",
+  "business_context": "Deductibles help control insurance costs by having policyholders share in smaller losses. Higher deductibles typically result in lower premiums. The deductible is applied per claim or per policy period depending on policy terms.",
+  "technical_bridge": "Stored in POLICY.DEDUCTIBLE_AMT. Related to CLAIM.DEDUCTIBLE_APPLIED which tracks the portion used for each claim.",
+  "synonyms": ["Out-of-pocket minimum"],
+  "allowed_values": null,
+  "data_domain": "Policy",
+  "associated_columns": "deductible|deductible_amt|ded_amt"
+}}
+
+Return the results as a JSON array with these exact keys:
+- business_term (string)
+- business_definition (string, required)
+- business_context (string, required)
+- technical_bridge (string or null)
+- synonyms (array of strings, empty array if none)
+- allowed_values (array of strings or null, for coded fields)
+- data_domain (string, one of the 8 domains)
+- associated_columns (string, pipe-separated)
 
 Return ONLY the JSON array, no additional text."""
 
@@ -233,35 +271,55 @@ Return ONLY the JSON array, no additional text."""
         return generate_sample_insurance_glossary()
 
 def generate_sample_insurance_glossary() -> List[Dict[str, Any]]:
-    """Generate sample insurance glossary when API is not available"""
+    """Generate sample insurance glossary with three-layer structure"""
     return [
         {
             "business_term": "Policy Number",
-            "description": "Unique identifier assigned to each insurance policy for tracking, reference, and transaction processing across all insurance operations and systems.",
+            "business_definition": "The unique identifier assigned to each insurance policy for tracking and reference throughout its lifecycle.",
+            "business_context": "Each policy must have exactly one policy number, which is used across all systems for claims processing, premium billing, and customer service. The policy number remains constant even if the policy is renewed or modified. It serves as the primary key for linking all policy-related transactions and documents.",
+            "technical_bridge": "Stored in POLICY.POLICY_NUMBER. Referenced by CLAIM.POLICY_NUMBER and PAYMENT.POLICY_NUMBER as foreign keys.",
+            "synonyms": ["Policy ID", "Contract Number"],
+            "allowed_values": None,
             "data_domain": "Policy",
             "associated_columns": "policy_number|pol_num|policy_id|pol_no"
         },
         {
             "business_term": "Claim Amount",
-            "description": "The monetary value of a claim representing the policyholder's requested or approved payment for a covered loss, subject to deductibles and coverage limits.",
+            "business_definition": "The monetary value of a claim representing the total amount requested or approved for payment to cover a policyholder's covered loss.",
+            "business_context": "The claim amount is determined by adjusters based on policy terms, deductibles, and coverage limits. It may be paid in a single settlement or multiple payments over time. The amount cannot exceed the policy's coverage limit minus any applicable deductible. This amount drives financial reserves and impacts loss ratio calculations.",
+            "technical_bridge": "Stored in CLAIM.CLAIM_AMOUNT. Related to PAYMENT.PAYMENT_AMOUNT which tracks individual disbursements. May differ from CLAIM.RESERVE_AMOUNT which is the estimated liability.",
+            "synonyms": ["Settlement Amount", "Claim Payment", "Loss Amount"],
+            "allowed_values": None,
             "data_domain": "Claims",
             "associated_columns": "claim_amount|claim_amt|settlement_amount|paid_amount"
         },
         {
             "business_term": "Premium Amount",
-            "description": "The total premium charged to the policyholder for insurance coverage, calculated based on risk assessment, coverage limits, and policy term.",
+            "business_definition": "The total amount charged to the policyholder for insurance coverage over a specified period.",
+            "business_context": "Premiums are calculated based on underwriting risk assessment, coverage limits, deductibles, and policy term. They can be paid in full annually or in installments (monthly, quarterly, semi-annually). The premium amount is the primary revenue source for insurance operations and must be sufficient to cover expected claims, expenses, and profit margin.",
+            "technical_bridge": "Stored in POLICY.PREMIUM_AMOUNT for annual premium or BILLING.INSTALLMENT_AMOUNT for payment plans. Related to PAYMENT.RECEIVED_AMOUNT for tracking payments.",
+            "synonyms": ["Insurance Premium", "Policy Premium", "Premium Charge"],
+            "allowed_values": None,
             "data_domain": "Finance",
             "associated_columns": "premium_amount|premium_amt|policy_premium|prem_amt"
         },
         {
-            "business_term": "Customer Information",
-            "description": "Personal and business information about policyholders including names, addresses, contact details, and identification numbers.",
-            "data_domain": "Customer",
-            "associated_columns": "customer_name|cust_name|customer_id|cust_address|customer_phone"
+            "business_term": "Policy Status",
+            "business_definition": "The current state of an insurance policy indicating whether coverage is active, suspended, or terminated.",
+            "business_context": "Policy status changes throughout the policy lifecycle based on premium payment, expiration, or policyholder actions. Only policies with 'active' status provide coverage and are eligible for claims. Status transitions require approval workflows and trigger billing, notification, and reporting processes.",
+            "technical_bridge": "Stored in POLICY.STATUS. Status changes are logged in POLICY_HISTORY with timestamps and reason codes.",
+            "synonyms": ["Coverage Status", "Policy State"],
+            "allowed_values": ["active", "pending", "lapsed", "cancelled", "expired", "suspended"],
+            "data_domain": "Policy",
+            "associated_columns": "policy_status|status|policy_state|coverage_status"
         },
         {
             "business_term": "Loss Ratio",
-            "description": "Key profitability metric measuring the proportion of premium income paid out as claims, indicating underwriting performance and pricing adequacy.",
+            "business_definition": "The percentage of premium income paid out as claims, calculated as total claims divided by total premiums earned.",
+            "business_context": "Loss ratio is a key profitability metric used to evaluate underwriting performance and pricing adequacy. A ratio above 100% indicates underwriting losses where claims exceed premiums. Insurance companies monitor loss ratios by product line, region, and time period to identify trends and adjust pricing strategies.",
+            "technical_bridge": "Calculated field: SUM(CLAIM.CLAIM_AMOUNT) / SUM(POLICY.EARNED_PREMIUM) * 100. Not stored directly but computed for reporting periods.",
+            "synonyms": ["Claims Ratio", "Loss Cost Ratio"],
+            "allowed_values": None,
             "data_domain": "Finance",
             "associated_columns": "loss_ratio|claims_ratio|loss_pct"
         }
@@ -269,7 +327,7 @@ def generate_sample_insurance_glossary() -> List[Dict[str, Any]]:
 
 def create_xlsx_file(glossary_data: List[Dict[str, Any]], filename: str) -> str:
     """
-    Create Excel file with glossary data following specifications
+    Create Excel file with glossary data using three-layer structure
     Returns: filepath to the created XLSX file
     """
     wb = Workbook()
@@ -277,12 +335,29 @@ def create_xlsx_file(glossary_data: List[Dict[str, Any]], filename: str) -> str:
     ws.title = "Business_Glossary"
 
     # Define headers
-    headers = ["Business Term", "Description", "Data Domain", "Associated Database Columns"]
+    headers = [
+        "Business Term",
+        "Business Definition",
+        "Business Context",
+        "Technical Bridge",
+        "Synonyms",
+        "Allowed Values",
+        "Data Domain",
+        "Associated Database Columns"
+    ]
 
     # Style for headers
-    header_font = Font(bold=True, color="FFFFFF")
+    header_font = Font(bold=True, color="FFFFFF", size=11)
     header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
     header_alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+
+    # Border style
+    thin_border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
 
     # Write headers
     for col_num, header in enumerate(headers, 1):
@@ -291,32 +366,74 @@ def create_xlsx_file(glossary_data: List[Dict[str, Any]], filename: str) -> str:
         cell.font = header_font
         cell.fill = header_fill
         cell.alignment = header_alignment
+        cell.border = thin_border
 
     # Write data
     for row_num, entry in enumerate(glossary_data, 2):
-        ws.cell(row=row_num, column=1).value = entry.get('business_term', '')
-        ws.cell(row=row_num, column=2).value = entry.get('description', '')
-        ws.cell(row=row_num, column=3).value = entry.get('data_domain', '')
-        ws.cell(row=row_num, column=4).value = entry.get('associated_columns', '')
+        # Business Term
+        cell = ws.cell(row=row_num, column=1)
+        cell.value = entry.get('business_term', '')
+        cell.font = Font(bold=True, size=10)
+        cell.border = thin_border
 
-        # Wrap text for description column
-        ws.cell(row=row_num, column=2).alignment = Alignment(wrap_text=True, vertical="top")
+        # Business Definition
+        cell = ws.cell(row=row_num, column=2)
+        cell.value = entry.get('business_definition', '')
+        cell.alignment = Alignment(wrap_text=True, vertical="top")
+        cell.border = thin_border
 
-    # Auto-fit column widths
-    for col_num, header in enumerate(headers, 1):
-        column_letter = get_column_letter(col_num)
-        if col_num == 2:  # Description column
-            ws.column_dimensions[column_letter].width = 60
-        elif col_num == 4:  # Associated Columns
-            ws.column_dimensions[column_letter].width = 40
-        else:
-            ws.column_dimensions[column_letter].width = 20
+        # Business Context
+        cell = ws.cell(row=row_num, column=3)
+        cell.value = entry.get('business_context', '')
+        cell.alignment = Alignment(wrap_text=True, vertical="top")
+        cell.border = thin_border
+
+        # Technical Bridge
+        cell = ws.cell(row=row_num, column=4)
+        cell.value = entry.get('technical_bridge', '') or 'N/A'
+        cell.alignment = Alignment(wrap_text=True, vertical="top")
+        cell.border = thin_border
+
+        # Synonyms
+        cell = ws.cell(row=row_num, column=5)
+        synonyms = entry.get('synonyms', [])
+        cell.value = ', '.join(synonyms) if synonyms else 'N/A'
+        cell.alignment = Alignment(wrap_text=True, vertical="top")
+        cell.border = thin_border
+
+        # Allowed Values
+        cell = ws.cell(row=row_num, column=6)
+        allowed_values = entry.get('allowed_values', None)
+        cell.value = ', '.join(allowed_values) if allowed_values else 'N/A'
+        cell.alignment = Alignment(wrap_text=True, vertical="top")
+        cell.border = thin_border
+
+        # Data Domain
+        cell = ws.cell(row=row_num, column=7)
+        cell.value = entry.get('data_domain', '')
+        cell.border = thin_border
+
+        # Associated Columns
+        cell = ws.cell(row=row_num, column=8)
+        cell.value = entry.get('associated_columns', '')
+        cell.alignment = Alignment(wrap_text=True, vertical="top")
+        cell.border = thin_border
+
+    # Set column widths
+    ws.column_dimensions['A'].width = 20  # Business Term
+    ws.column_dimensions['B'].width = 50  # Business Definition
+    ws.column_dimensions['C'].width = 60  # Business Context
+    ws.column_dimensions['D'].width = 50  # Technical Bridge
+    ws.column_dimensions['E'].width = 25  # Synonyms
+    ws.column_dimensions['F'].width = 30  # Allowed Values
+    ws.column_dimensions['G'].width = 15  # Data Domain
+    ws.column_dimensions['H'].width = 40  # Associated Columns
+
+    # Set row height for header
+    ws.row_dimensions[1].height = 30
 
     # Freeze header row
     ws.freeze_panes = "A2"
-
-    # Add data validation for Data Domain column (optional, for reference)
-    # Note: This doesn't add dropdown in existing cells, but sets validation
 
     # Save file
     output_path = os.path.join(app.config['OUTPUT_FOLDER'], filename)

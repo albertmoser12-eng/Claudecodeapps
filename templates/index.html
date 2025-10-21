@@ -10,7 +10,7 @@
     <div class="container">
         <header>
             <h1>Insurance Business Glossary Generator</h1>
-            <p class="subtitle">Upload database column names to create a comprehensive insurance business glossary</p>
+            <p class="subtitle">Upload database column names to create a comprehensive insurance business glossary with three-layer definitions</p>
         </header>
 
         <!-- Step 1: File Upload -->
@@ -75,7 +75,7 @@
             </div>
         </div>
 
-        <!-- Step 3: Glossary Results -->
+        <!-- Step 3: Glossary Results with Three-Layer Structure -->
         <div id="resultsSection" class="section" style="display: none;">
             <div class="results-header">
                 <h2>Business Glossary Results</h2>
@@ -96,31 +96,23 @@
                 </button>
             </div>
 
-            <div class="table-wrapper">
-                <table id="glossaryTable">
-                    <thead>
-                        <tr>
-                            <th>Business Term</th>
-                            <th>Description</th>
-                            <th>Data Domain</th>
-                            <th>Associated Database Columns</th>
-                        </tr>
-                    </thead>
-                    <tbody id="glossaryBody">
-                    </tbody>
-                </table>
+            <div id="glossaryResults" class="glossary-results">
+                <!-- Terms will be rendered here as cards -->
             </div>
 
             <div class="quality-checklist">
                 <h3>✓ Quality Assurance Checklist</h3>
+                <p>Each definition follows the three-layer structure from glossary_instructions.md:</p>
                 <ul>
-                    <li>All abbreviations have been clarified</li>
-                    <li>No duplicate business terms exist</li>
-                    <li>Each entry has all required fields completed</li>
-                    <li>Descriptions are under 50 words</li>
-                    <li>All database columns are accounted for</li>
-                    <li>Domain classifications are accurate</li>
-                    <li>File format meets specifications</li>
+                    <li><strong>Layer 1: Business Definition</strong> - Plain language, understandable to non-technical stakeholders</li>
+                    <li><strong>Layer 2: Business Context</strong> - Why it matters, business processes, relationships</li>
+                    <li><strong>Layer 3: Technical Bridge</strong> - System mapping for technical teams (optional)</li>
+                    <li>No circular definitions</li>
+                    <li>No unexplained acronyms</li>
+                    <li>Terms defined without requiring other term lookups first</li>
+                    <li>Scope and boundaries are clear</li>
+                    <li>Dates specify exactly which event they represent</li>
+                    <li>Relationships and cardinality mentioned when relevant</li>
                 </ul>
             </div>
         </div>

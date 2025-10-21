@@ -22,7 +22,7 @@ const abbreviationsForm = document.getElementById('abbreviationsForm');
 const generateBtn = document.getElementById('generateBtn');
 const startOverBtn = document.getElementById('startOverBtn');
 
-const glossaryBody = document.getElementById('glossaryBody');
+const glossaryResults = document.getElementById('glossaryResults');
 const termCountEl = document.getElementById('termCount');
 const downloadBtn = document.getElementById('downloadBtn');
 const exportCsvBtn = document.getElementById('exportCsvBtn');
@@ -221,47 +221,141 @@ function showGlossaryResults(data) {
     // Update term count
     termCountEl.textContent = data.total_terms;
 
-    // Render glossary table
-    renderGlossaryTable(data.glossary);
+    // Render glossary as cards with three-layer structure
+    renderGlossaryCards(data.glossary);
 
     // Scroll to results
     resultsSection.scrollIntoView({ behavior: 'smooth' });
 }
 
-function renderGlossaryTable(glossary) {
-    glossaryBody.innerHTML = '';
+function renderGlossaryCards(glossary) {
+    glossaryResults.innerHTML = '';
 
     glossary.forEach(item => {
-        const row = document.createElement('tr');
+        const card = document.createElement('div');
+        card.className = 'glossary-card';
 
-        row.innerHTML = `
-            <td><strong>${escapeHtml(item.business_term)}</strong></td>
-            <td class="description-cell">${escapeHtml(item.description)}</td>
-            <td><span class="domain-badge">${escapeHtml(item.data_domain)}</span></td>
-            <td class="columns-cell">${formatColumns(item.associated_columns)}</td>
+        // Header with term and domain badge
+        const header = document.createElement('div');
+        header.className = 'card-header';
+        header.innerHTML = `
+            <h3>${escapeHtml(item.business_term)}</h3>
+            <span class="domain-badge">${escapeHtml(item.data_domain)}</span>
         `;
+        card.appendChild(header);
 
-        glossaryBody.appendChild(row);
+        // Layer 1: Business Definition
+        const layer1 = document.createElement('div');
+        layer1.className = 'layer-section layer-1';
+        layer1.innerHTML = `
+            <div class="layer-label">Layer 1: Business Definition</div>
+            <p class="layer-content">${escapeHtml(item.business_definition)}</p>
+        `;
+        card.appendChild(layer1);
+
+        // Layer 2: Business Context
+        const layer2 = document.createElement('div');
+        layer2.className = 'layer-section layer-2';
+        layer2.innerHTML = `
+            <div class="layer-label">Layer 2: Business Context</div>
+            <p class="layer-content">${escapeHtml(item.business_context)}</p>
+        `;
+        card.appendChild(layer2);
+
+        // Layer 3: Technical Bridge (optional, collapsible)
+        if (item.technical_bridge) {
+            const layer3 = document.createElement('div');
+            layer3.className = 'layer-section layer-3';
+            layer3.innerHTML = `
+                <div class="layer-label collapsible">
+                    <span>Layer 3: Technical Bridge</span>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div class="layer-content collapsible-content">
+                    ${escapeHtml(item.technical_bridge)}
+                </div>
+            `;
+
+            // Make it collapsible
+            const labelEl = layer3.querySelector('.layer-label');
+            const contentEl = layer3.querySelector('.layer-content');
+            labelEl.addEventListener('click', () => {
+                contentEl.classList.toggle('expanded');
+                labelEl.querySelector('.toggle-icon').textContent =
+                    contentEl.classList.contains('expanded') ? '▲' : '▼';
+            });
+
+            card.appendChild(layer3);
+        }
+
+        // Additional info section
+        const additionalInfo = document.createElement('div');
+        additionalInfo.className = 'additional-info';
+
+        let infoHTML = '';
+
+        // Synonyms
+        if (item.synonyms && item.synonyms.length > 0) {
+            infoHTML += `
+                <div class="info-item">
+                    <strong>Synonyms:</strong> ${item.synonyms.map(s => `<span class="tag">${escapeHtml(s)}</span>`).join(' ')}
+                </div>
+            `;
+        }
+
+        // Allowed Values
+        if (item.allowed_values && item.allowed_values.length > 0) {
+            infoHTML += `
+                <div class="info-item">
+                    <strong>Allowed Values:</strong> ${item.allowed_values.map(v => `<code>${escapeHtml(v)}</code>`).join(', ')}
+                </div>
+            `;
+        }
+
+        // Associated Columns
+        if (item.associated_columns) {
+            const columns = item.associated_columns.split('|');
+            infoHTML += `
+                <div class="info-item">
+                    <strong>Associated Database Columns:</strong> ${columns.map(c => `<code>${escapeHtml(c)}</code>`).join(', ')}
+                </div>
+            `;
+        }
+
+        if (infoHTML) {
+            additionalInfo.innerHTML = infoHTML;
+            card.appendChild(additionalInfo);
+        }
+
+        glossaryResults.appendChild(card);
     });
 }
 
-function formatColumns(columns) {
-    if (!columns) return '';
-    const columnList = columns.split('|');
-    return columnList.map(col => `<code>${escapeHtml(col)}</code>`).join(', ');
-}
-
 function generateCSV(glossary) {
-    const headers = ['Business Term', 'Description', 'Data Domain', 'Associated Database Columns'];
+    const headers = [
+        'Business Term',
+        'Business Definition',
+        'Business Context',
+        'Technical Bridge',
+        'Synonyms',
+        'Allowed Values',
+        'Data Domain',
+        'Associated Database Columns'
+    ];
+
     const rows = glossary.map(item => [
         item.business_term || '',
-        item.description || '',
+        item.business_definition || '',
+        item.business_context || '',
+        item.technical_bridge || '',
+        (item.synonyms || []).join('; '),
+        (item.allowed_values || []).join('; '),
         item.data_domain || '',
         item.associated_columns || ''
     ]);
 
     const csvRows = [headers, ...rows].map(row =>
-        row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(',')
+        row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
     );
 
     return csvRows.join('\n');
@@ -311,12 +405,14 @@ function resetApp() {
 
     // Clear error
     hideError();
+
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function escapeHtml(unsafe) {
     if (!unsafe) return '';
-    return unsafe
-        .toString()
+    return String(unsafe)
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
