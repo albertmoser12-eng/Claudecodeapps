@@ -1,190 +1,218 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_file
 import os
 import json
 import csv
 import pandas as pd
 from werkzeug.utils import secure_filename
 import re
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Tuple
 import anthropic
+from datetime import datetime
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment
+from openpyxl.utils import get_column_letter
+import io
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
+app.config['OUTPUT_FOLDER'] = 'outputs'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 app.config['ALLOWED_EXTENSIONS'] = {'txt', 'csv', 'xlsx', 'xls', 'json'}
 
-# Create uploads directory if it doesn't exist
+# Create directories if they don't exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+os.makedirs(app.config['OUTPUT_FOLDER'], exist_ok=True)
+
+# Insurance domain classifications
+INSURANCE_DOMAINS = [
+    "Claims", "Policy", "Risk", "Customer", "Broker",
+    "Agent", "Finance", "HR"
+]
 
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
-def parse_file(filepath):
-    """Parse uploaded file and extract line items for glossary generation"""
+def extract_column_names(filepath) -> List[str]:
+    """Extract database column names from uploaded file"""
     _, ext = os.path.splitext(filepath)
     ext = ext.lower()
 
     try:
         if ext == '.csv':
-            df = pd.read_csv(filepath)
-            # Extract line items from the dataframe
-            return extract_line_items_from_dataframe(df)
+            df = pd.read_csv(filepath, nrows=0)  # Read only headers
+            return df.columns.tolist()
         elif ext in ['.xlsx', '.xls']:
-            df = pd.read_excel(filepath)
-            # Extract line items from the dataframe
-            return extract_line_items_from_dataframe(df)
+            df = pd.read_excel(filepath, nrows=0)  # Read only headers
+            return df.columns.tolist()
         elif ext == '.json':
             with open(filepath, 'r', encoding='utf-8') as f:
                 data = json.load(f)
-                return json.dumps(data, indent=2)
+                if isinstance(data, list) and len(data) > 0:
+                    return list(data[0].keys())
+                elif isinstance(data, dict):
+                    return list(data.keys())
+                return []
         elif ext == '.txt':
             with open(filepath, 'r', encoding='utf-8') as f:
-                return f.read()
+                # Assume each line is a column name
+                return [line.strip() for line in f.readlines() if line.strip()]
         else:
-            return None
+            return []
     except Exception as e:
-        print(f"Error parsing file: {e}")
-        return None
+        print(f"Error extracting column names: {e}")
+        return []
 
-def extract_line_items_from_dataframe(df):
+def deduplicate_columns(columns: List[str]) -> Tuple[List[str], Dict[str, List[str]]]:
     """
-    Extract line items from a dataframe for glossary generation.
-    Assumes the file contains business terms as rows with columns like:
-    - Term/Title/Name (the business term)
-    - Description/Definition (explanation)
-    - Other metadata columns
+    Deduplicate column names and group similar ones.
+    Returns: (deduplicated_list, duplicates_map)
     """
-    if df.empty:
-        return "No data found in file"
+    seen = {}
+    deduplicated = []
+    duplicates_map = {}
 
-    # Convert dataframe to a structured text format
-    result = []
+    for col in columns:
+        # Normalize the column name for comparison
+        normalized = col.lower().replace('_', '').replace('-', '').replace(' ', '')
 
-    # Get column names
-    columns = df.columns.tolist()
+        if normalized not in seen:
+            seen[normalized] = col
+            deduplicated.append(col)
+        else:
+            # Track duplicates
+            original = seen[normalized]
+            if original not in duplicates_map:
+                duplicates_map[original] = []
+            duplicates_map[original].append(col)
 
-    # Iterate through rows and format them as line items
-    for idx, row in df.iterrows():
-        item_parts = []
-        for col in columns:
-            value = row[col]
-            if pd.notna(value):  # Only include non-null values
-                item_parts.append(f"{col}: {value}")
+    return deduplicated, duplicates_map
 
-        if item_parts:
-            result.append("\n".join(item_parts))
-
-    return "\n\n---\n\n".join(result)
-
-def generate_glossary(file_content: str, business_context: str) -> List[Dict[str, Any]]:
+def identify_abbreviations(columns: List[str]) -> List[Dict[str, Any]]:
     """
-    Generate business glossary using Claude API
+    Identify abbreviations that might need clarification.
+    Returns list of abbreviations with possible meanings.
     """
-    # Check if ANTHROPIC_API_KEY is set
+    # Common insurance abbreviations that might be ambiguous
+    ambiguous_abbrevs = {
+        'POL': ['Policy', 'Police', 'Pollution'],
+        'CLM': ['Claim', 'Column'],
+        'AGT': ['Agent', 'Agreement'],
+        'CUST': ['Customer', 'Custody', 'Customization'],
+        'AMT': ['Amount'],
+        'NUM': ['Number'],
+        'ID': ['Identifier', 'Identity'],
+        'DT': ['Date', 'Data Type'],
+        'TYP': ['Type'],
+        'STS': ['Status'],
+        'PCT': ['Percent', 'Percentage'],
+        'CNT': ['Count'],
+        'IND': ['Indicator', 'Individual', 'Index'],
+        'REF': ['Reference', 'Refund'],
+        'PREM': ['Premium', 'Preliminary'],
+        'DEDUCT': ['Deductible', 'Deduction'],
+        'COV': ['Coverage', 'Covenant'],
+        'LIAB': ['Liability'],
+        'BENEF': ['Beneficiary', 'Benefit'],
+        'ADDR': ['Address'],
+        'TEL': ['Telephone', 'Telegram'],
+        'EMP': ['Employee', 'Employer', 'Empty'],
+        'DEPT': ['Department', 'Deposit'],
+        'DIV': ['Division', 'Dividend'],
+        'PROD': ['Product', 'Production'],
+        'COMM': ['Commission', 'Communication', 'Commercial']
+    }
+
+    clarifications_needed = []
+
+    for col in columns:
+        # Split by common delimiters
+        parts = re.split(r'[_\-\s.]+', col.upper())
+
+        for part in parts:
+            if part in ambiguous_abbrevs and len(ambiguous_abbrevs[part]) > 1:
+                # Check if we already added this abbreviation
+                if not any(c['abbreviation'] == part for c in clarifications_needed):
+                    clarifications_needed.append({
+                        'abbreviation': part,
+                        'possible_meanings': ambiguous_abbrevs[part],
+                        'example_columns': [c for c in columns if part in c.upper()][:3]
+                    })
+
+    return clarifications_needed
+
+def generate_glossary_with_claude(columns: List[str], abbreviation_clarifications: Dict[str, str]) -> List[Dict[str, Any]]:
+    """
+    Generate business glossary using Claude API following the 6-step process
+    """
     api_key = os.environ.get('ANTHROPIC_API_KEY')
 
     if not api_key:
-        # Fallback to sample data if API key is not available
-        return generate_sample_glossary(business_context)
+        return generate_sample_insurance_glossary()
 
     try:
         client = anthropic.Anthropic(api_key=api_key)
 
-        prompt = f"""You are a business analyst expert specializing in {business_context}.
+        # Format abbreviation clarifications
+        clarifications_text = ""
+        if abbreviation_clarifications:
+            clarifications_text = "\n\nAbbreviation Clarifications Provided by User:\n"
+            for abbrev, meaning in abbreviation_clarifications.items():
+                clarifications_text += f"- {abbrev}: {meaning}\n"
 
-Analyze the following data containing business terms and metrics. Each item in the data represents a business term or metric.
-Create a comprehensive business glossary by enriching and standardizing each term.
+        prompt = f"""You are an expert insurance data analyst creating a comprehensive business glossary from database column names.
 
-CRITICAL REQUIREMENTS FOR EACH FIELD:
+Follow these steps systematically:
 
-1. Title: Business-oriented name using typically TWO WORDS:
-   - Use natural business language: "Policy Number", "Claim Status", "Customer Name", "Email Address"
-   - In exceptional cases, use 3-4 words: "Customer Email Address", "Employee Telephone Number"
-   - AVOID underscores, technical naming conventions, or database column names
-   - Use proper capitalization (title case)
-   GOOD EXAMPLES: "Policy Number", "Premium Amount", "Loss Ratio", "Session Duration"
-   BAD EXAMPLES: "premium_amount", "policy_number_id", "sys_uptime_pct"
+## Step 1: Data Preparation and Deduplication
+The column names have already been deduplicated. Here are the database columns to analyze:
+{json.dumps(columns, indent=2)}
+{clarifications_text}
 
-2. Term Type: Classify as either "Business term" or "Business metric"
-   - "Business term": Descriptive attributes, identifiers, status values, dates, names
-   - "Business metric": Calculated values, ratios, counts, aggregations, KPIs
-   EXAMPLES:
-   - Business term: "Policy Number", "Customer Name", "Policy Status", "Effective Date"
-   - Business metric: "Loss Ratio", "Total Premium", "Policy Count", "Average Response Time"
+## Step 2-6: Generate Business Glossary
 
-3. Data Domain: Group into context-specific data domains for {business_context}:
-   For General Insurance domains: "Policy", "Claim", "Customer", "Underwriting", "Financial", "Compliance"
-   For Life Insurance domains: "Policy", "Customer", "Underwriting", "Financial", "Actuarial", "Benefits"
-   For Information Technology domains: "Security", "Performance", "Infrastructure", "Application", "Data", "User Management"
-   Assign the most appropriate domain based on the business context and term purpose.
+Your task is to:
+1. Review the database column names
+2. Classify each column into one of these 8 insurance data domains:
+   - **Claims**: Data related to insurance claims, settlements, adjustments, and claim processing
+   - **Policy**: Information about insurance policies, coverage, premiums, and policy administration
+   - **Risk**: Data concerning risk assessment, underwriting, exposures, and risk management
+   - **Customer**: Personal and business information about policyholders and insureds
+   - **Broker**: Information about insurance brokers, their relationships, and transactions
+   - **Agent**: Data about insurance agents, their performance, and client relationships
+   - **Finance**: Financial data including payments, accounting, billing, and financial reporting
+   - **HR**: Human resources data for employees, payroll, and organizational structure
 
-4. Description: Focus on SEMANTIC MEANING and PURPOSE. Explain:
-   - What the term IS (its definition)
-   - What it measures or represents
-   - How it's used in business operations
-   - Why it matters
-   AVOID generic phrases like "Business term representing..." or "Used in the {business_context} domain"
-   GOOD EXAMPLE: "The total number of vendors is the count of vendors with unique vendor ID and is used to analyze and monitor relationships and data completeness with third-party providers"
-   BAD EXAMPLE: "Business term representing vendor information in the General Insurance domain"
+3. Create ABSTRACT BUSINESS TERMS by grouping related database columns:
+   - **Do NOT create one-to-one mappings** between columns and business terms
+   - Instead, group related columns under broader business concepts
+   - Use standard insurance industry terminology
+   - Focus on business meaning, not technical implementation
 
-5. Examples: Provide ACTUAL DATA VALUES that would appear in a database:
-   - For counts/numbers: Use realistic values like "2,500" or "15,342"
-   - For status fields: Use actual status values like "active", "inactive", "pending"
-   - For dates: Use realistic date formats like "2024-01-15", "2023-12-31"
-   - For amounts: Use real currency values like "$150,000", "$2,500.00"
-   - For IDs: Use representative formats like "VNDR-00123", "POL-2024-001"
-   GOOD EXAMPLE: "2,500" or "active, inactive, suspended"
-   BAD EXAMPLE: "High number of vendors" or "Various status values"
+4. For each business term, provide:
+   - **Business Term**: Clear, concise insurance industry term (use natural language, 2-4 words)
+   - **Description**: Business-focused definition (maximum 50 words) explaining the concept's relevance to insurance operations
+   - **Data Domain**: One of the 8 specified domains
+   - **Associated Database Columns**: List of database columns that relate to this business term (pipe-separated)
 
-6. Business Logic: Provide SPECIFIC VALIDATION RULES and business constraints:
-   - Data validation rules (e.g., "Must be greater than 0", "Must be unique")
-   - Relationship rules (e.g., "End date must be after start date")
-   - Business constraints (e.g., "Cannot exceed coverage limit", "Required when policy is active")
-   - Calculation dependencies (e.g., "Depends on premium amount and coverage period")
-   AVOID generic statements like "Governed by business rules" or "Subject to data quality standards"
-   GOOD EXAMPLE: "Contract end date must be after contract start date; minimum contract duration is 30 days"
-   BAD EXAMPLE: "Governed by General Insurance business rules and data quality standards"
+## Quality Standards:
+- Descriptions must be business-friendly, avoiding technical jargon
+- Focus on "what" and "why" rather than "how"
+- Use active voice and clear language
+- Ensure consistency in terminology across all entries
+- Group related columns together (e.g., policy_number, pol_num, policy_id → "Policy Number")
 
-7. Data Type: The technical data type (string, integer, decimal, date, boolean, currency, etc.)
-
-8. Technical Aliases: Alternative technical names or database column names (pipe-separated)
-   EXAMPLE: "vendor_count|total_vendors|vndr_cnt"
-
-9. Synonyms: Other business names for the same concept (pipe-separated)
-   EXAMPLE: "Supplier Count|Provider Total|Third-Party Count"
-
-10. Logical Formula: For metrics, include ACTUAL ELEMENTS from the title/description:
-   - Reference specific fields or tables
-   - Use clear calculation notation
-   - Include aggregation functions where appropriate
-   GOOD EXAMPLE: "Count(VendorID)" for "Total number of vendors"
-   GOOD EXAMPLE: "SUM(ClaimAmount) / SUM(Premium) * 100" for "Loss Ratio"
-   BAD EXAMPLE: "Calculated based on vendor data"
-
-IMPORTANT: Extract business terms from the LINE ITEMS in the data, not from column headers.
-Each line item represents a separate business term or concept.
-
-Data content:
-{file_content[:8000]}
-
-Please return the results in JSON format as an array of objects with these exact keys:
-- title
-- term_type
-- data_domain
+Return the results in JSON format as an array of objects with these exact keys:
+- business_term
 - description
-- examples
-- business_logic
-- data_type
-- technical_aliases
-- synonyms
-- logical_formula (empty string if not a metric)
+- data_domain
+- associated_columns (pipe-separated string)
 
 Return ONLY the JSON array, no additional text."""
 
         message = client.messages.create(
             model="claude-3-5-sonnet-20241022",
-            max_tokens=4096,
+            max_tokens=8192,
             messages=[
                 {"role": "user", "content": prompt}
             ]
@@ -202,165 +230,99 @@ Return ONLY the JSON array, no additional text."""
 
     except Exception as e:
         print(f"Error generating glossary with Claude: {e}")
-        return generate_sample_glossary(business_context)
+        return generate_sample_insurance_glossary()
 
-def generate_sample_glossary(business_context: str) -> List[Dict[str, Any]]:
-    """Generate sample glossary data based on business context"""
+def generate_sample_insurance_glossary() -> List[Dict[str, Any]]:
+    """Generate sample insurance glossary when API is not available"""
+    return [
+        {
+            "business_term": "Policy Number",
+            "description": "Unique identifier assigned to each insurance policy for tracking, reference, and transaction processing across all insurance operations and systems.",
+            "data_domain": "Policy",
+            "associated_columns": "policy_number|pol_num|policy_id|pol_no"
+        },
+        {
+            "business_term": "Claim Amount",
+            "description": "The monetary value of a claim representing the policyholder's requested or approved payment for a covered loss, subject to deductibles and coverage limits.",
+            "data_domain": "Claims",
+            "associated_columns": "claim_amount|claim_amt|settlement_amount|paid_amount"
+        },
+        {
+            "business_term": "Premium Amount",
+            "description": "The total premium charged to the policyholder for insurance coverage, calculated based on risk assessment, coverage limits, and policy term.",
+            "data_domain": "Finance",
+            "associated_columns": "premium_amount|premium_amt|policy_premium|prem_amt"
+        },
+        {
+            "business_term": "Customer Information",
+            "description": "Personal and business information about policyholders including names, addresses, contact details, and identification numbers.",
+            "data_domain": "Customer",
+            "associated_columns": "customer_name|cust_name|customer_id|cust_address|customer_phone"
+        },
+        {
+            "business_term": "Loss Ratio",
+            "description": "Key profitability metric measuring the proportion of premium income paid out as claims, indicating underwriting performance and pricing adequacy.",
+            "data_domain": "Finance",
+            "associated_columns": "loss_ratio|claims_ratio|loss_pct"
+        }
+    ]
 
-    glossaries = {
-        "General Insurance": [
-            {
-                "title": "Premium Amount",
-                "term_type": "Business term",
-                "data_domain": "Financial",
-                "description": "The total premium charged to the policyholder for insurance coverage, calculated based on underwriting risk assessment, coverage limits, deductibles, and policy term. This amount represents the insurer's pricing for accepting the covered risks and is the primary revenue source for insurance operations.",
-                "examples": "$1,250.00, $3,450.50, $875.25",
-                "business_logic": "Must be greater than $0; cannot be modified after policy issuance without underwriting approval; annual premium must equal sum of installment payments if payment plan selected",
-                "data_type": "Decimal(10,2)",
-                "technical_aliases": "premium_amount|policy_premium|prem_amt|charged_premium",
-                "synonyms": "Policy Premium|Insurance Premium|Premium Charge",
-                "logical_formula": ""
-            },
-            {
-                "title": "Claim Amount",
-                "term_type": "Business term",
-                "data_domain": "Claim",
-                "description": "The monetary value of a claim representing the policyholder's requested or approved payment for a covered loss. This amount is assessed by claims adjusters against policy terms and is subject to deductibles, coverage limits, and policy exclusions to determine the final settlement payment.",
-                "examples": "$5,250.00, $15,000.00, $2,450.75",
-                "business_logic": "Must be greater than $0; cannot exceed policy coverage limit minus deductible; requires supporting documentation for amounts over $10,000; must be validated against policy effective dates",
-                "data_type": "Decimal(12,2)",
-                "technical_aliases": "claim_amt|paid_amount|settlement_amount|loss_amount",
-                "synonyms": "Settlement Amount|Claim Payment|Loss Payment",
-                "logical_formula": ""
-            },
-            {
-                "title": "Loss Ratio",
-                "term_type": "Business metric",
-                "data_domain": "Financial",
-                "description": "A key profitability metric measuring the proportion of premium income paid out as claims, calculated as total incurred losses divided by earned premiums. Insurance companies use this metric to evaluate underwriting performance, pricing adequacy, and overall portfolio profitability. A loss ratio above 100% indicates underwriting losses.",
-                "examples": "0.67, 0.85, 1.12",
-                "business_logic": "Must be greater than or equal to 0; values above 1.0 indicate unprofitable underwriting; calculated monthly and year-to-date; excludes acquisition costs and operating expenses",
-                "data_type": "Decimal(5,4)",
-                "technical_aliases": "loss_ratio|claims_ratio|incurred_loss_ratio",
-                "synonyms": "Claims Ratio|Loss Cost Ratio",
-                "logical_formula": "SUM(ClaimAmount) / SUM(EarnedPremium)"
-            },
-            {
-                "title": "Policy Status",
-                "term_type": "Business term",
-                "data_domain": "Policy",
-                "description": "The current state of an insurance policy indicating whether coverage is active, suspended, or terminated. This status determines billing requirements, coverage validity, and claim eligibility, and changes based on payment status, expiration dates, and policyholder actions.",
-                "examples": "active, lapsed, cancelled, expired",
-                "business_logic": "Must be one of predefined values: active, pending, lapsed, cancelled, expired; only 'active' policies provide coverage; status changes require approval workflow; cannot change from cancelled to active without new underwriting",
-                "data_type": "VARCHAR(20)",
-                "technical_aliases": "policy_status|status|policy_state|coverage_status",
-                "synonyms": "Coverage Status|Policy State",
-                "logical_formula": ""
-            }
-        ],
-        "Life Insurance": [
-            {
-                "title": "Sum Assured",
-                "term_type": "Business term",
-                "data_domain": "Policy",
-                "description": "The guaranteed lump sum amount payable to designated beneficiaries upon the insured's death or at policy maturity for endowment plans. This amount is determined during policy inception through underwriting assessment and remains fixed throughout the policy term, serving as the foundation for premium calculation and representing the insurer's maximum liability under the contract.",
-                "examples": "$500,000.00, $1,000,000.00, $250,000.00",
-                "business_logic": "Must be at least $50,000 for individual policies; cannot exceed 20 times annual income for term insurance or 10 times for whole life; requires medical underwriting for amounts above $1,000,000; cannot be increased without new underwriting assessment",
-                "data_type": "Decimal(12,2)",
-                "technical_aliases": "sum_assured|coverage_amount|death_benefit|face_amount",
-                "synonyms": "Death Benefit|Face Value|Coverage Amount",
-                "logical_formula": ""
-            },
-            {
-                "title": "Surrender Value",
-                "term_type": "Business term",
-                "data_domain": "Financial",
-                "description": "The cash amount payable to the policyholder if the policy is voluntarily terminated before its maturity date or the insured's death. This value accumulates over the policy term based on paid premiums, investment performance, and guaranteed returns, minus surrender charges, policy loans, and administrative fees. Only available after the policy has been in force for the minimum surrender period.",
-                "examples": "$12,450.50, $28,900.00, $156,780.25",
-                "business_logic": "Only available after minimum 3 years from policy inception; must be less than or equal to sum assured; reduces to zero if policy loans exceed surrender value; calculation excludes unpaid premiums and interest on loans; policy terminates upon surrender",
-                "data_type": "Decimal(12,2)",
-                "technical_aliases": "surrender_value|cash_surrender_value|csv|termination_value",
-                "synonyms": "Cash Value|Termination Value|Policy Cash Value",
-                "logical_formula": "SUM(PremiumPaid) - SurrenderCharges - PolicyFees - OutstandingLoans"
-            },
-            {
-                "title": "Policy Term",
-                "term_type": "Business term",
-                "data_domain": "Policy",
-                "description": "The duration in years for which the life insurance policy provides coverage, starting from the policy commencement date and ending at the maturity date or term expiration. This period determines premium payment duration, coverage availability, and maturity benefit eligibility for endowment plans.",
-                "examples": "10, 20, 25, 30",
-                "business_logic": "Must be between 5 and 40 years; maximum term limited by insured age at maturity (typically age 75 or 80); term plus entry age cannot exceed maximum age limit; cannot be modified after policy issuance; determines premium calculation basis",
-                "data_type": "Integer",
-                "technical_aliases": "policy_term|term_years|coverage_period|policy_duration",
-                "synonyms": "Coverage Period|Policy Duration|Insurance Term",
-                "logical_formula": ""
-            },
-            {
-                "title": "Persistency Ratio",
-                "term_type": "Business metric",
-                "data_domain": "Financial",
-                "description": "A retention metric measuring the percentage of life insurance policies that remain active and in-force over a specified period, calculated by comparing active policies at period end to policies at period start. This metric indicates customer satisfaction, policy affordability, and portfolio quality, with higher ratios reflecting better business retention and profitability.",
-                "examples": "0.88, 0.92, 0.85",
-                "business_logic": "Must be between 0 and 1; calculated monthly, quarterly, and annually; excludes policies terminated due to maturity or death claims; includes only renewable policies; values below 0.80 trigger retention improvement initiatives",
-                "data_type": "Decimal(4,4)",
-                "technical_aliases": "persistency_ratio|retention_rate|policy_retention|continuation_ratio",
-                "synonyms": "Retention Rate|Policy Continuation Ratio|Lapse Ratio Inverse",
-                "logical_formula": "COUNT(ActivePolicies_EndPeriod) / COUNT(ActivePolicies_StartPeriod)"
-            }
-        ],
-        "Information Technology": [
-            {
-                "title": "User ID",
-                "term_type": "Business term",
-                "data_domain": "User Management",
-                "description": "A unique alphanumeric identifier assigned to each registered system user for authentication, authorization, and audit trail purposes. This identifier serves as the primary key in the user management system and is used across all application modules to track user actions, enforce access controls, and maintain data security compliance.",
-                "examples": "USR-000123, EMP-045678, user.john@example.com",
-                "business_logic": "Must be unique across all users; cannot be null or empty; length between 6 and 50 characters; cannot be changed after creation; must persist even after user account deactivation for audit history; alphanumeric and special characters (@.-_) only",
-                "data_type": "VARCHAR(50)",
-                "technical_aliases": "user_id|uid|username|login_id|user_identifier",
-                "synonyms": "Username|Login ID|User Identifier|Account ID",
-                "logical_formula": ""
-            },
-            {
-                "title": "Session Duration",
-                "term_type": "Business metric",
-                "data_domain": "Security",
-                "description": "The elapsed time in minutes between user login and logout (or timeout), measuring how long a user maintains an active authenticated session. This metric is critical for analyzing user engagement patterns, optimizing session timeout policies, and identifying potential security anomalies from abnormally long sessions.",
-                "examples": "45, 120, 15, 240",
-                "business_logic": "Must be greater than 0; maximum session duration is 480 minutes (8 hours); sessions exceeding 30 minutes of inactivity are automatically terminated; duration calculated only for successfully authenticated sessions; concurrent sessions from same user are tracked separately",
-                "data_type": "Integer",
-                "technical_aliases": "session_duration|session_time|login_duration|active_time_minutes",
-                "synonyms": "Login Duration|Active Session Time|Session Length",
-                "logical_formula": "DATEDIFF(minute, SessionStart, SessionEnd)"
-            },
-            {
-                "title": "System Uptime",
-                "term_type": "Business metric",
-                "data_domain": "Infrastructure",
-                "description": "The percentage of time the application system is fully operational and accessible to users over a defined measurement period, calculated as total available time divided by total time excluding scheduled maintenance windows. This metric is a key Service Level Agreement (SLA) indicator measuring system reliability and is used to assess infrastructure performance and identify improvement opportunities.",
-                "examples": "99.95, 99.87, 100.00, 99.50",
-                "business_logic": "Must be between 0 and 100; calculated hourly, daily, and monthly; excludes planned maintenance windows documented in change management system; SLA target is 99.9% monthly; values below 99.5% trigger incident investigation; includes only production environment downtime",
-                "data_type": "Decimal(5,2)",
-                "technical_aliases": "uptime_pct|system_uptime|availability_pct|service_availability",
-                "synonyms": "System Availability|Service Uptime|Availability Percentage",
-                "logical_formula": "(TotalMinutes - UnplannedDowntimeMinutes) / TotalMinutes * 100"
-            },
-            {
-                "title": "Response Time",
-                "term_type": "Business metric",
-                "data_domain": "Performance",
-                "description": "The time in milliseconds elapsed between receiving an API request and sending the complete response, measuring the performance and efficiency of API endpoints. This metric is monitored to ensure optimal user experience, identify performance bottlenecks, and maintain service level objectives for application responsiveness.",
-                "examples": "125, 350, 89, 1250",
-                "business_logic": "Must be greater than 0; target response time is under 200ms for 95th percentile; responses exceeding 2000ms (2 seconds) trigger performance alerts; measured at application layer excluding network latency; calculated only for successful HTTP 200 responses; aggregated by endpoint and time period",
-                "data_type": "Integer",
-                "technical_aliases": "response_time_ms|api_latency|request_duration|api_response_time",
-                "synonyms": "API Latency|Response Time|Request Duration|Endpoint Performance",
-                "logical_formula": "ResponseTimestamp - RequestTimestamp"
-            }
-        ]
-    }
+def create_xlsx_file(glossary_data: List[Dict[str, Any]], filename: str) -> str:
+    """
+    Create Excel file with glossary data following specifications
+    Returns: filepath to the created XLSX file
+    """
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Business_Glossary"
 
-    return glossaries.get(business_context, glossaries["Information Technology"])
+    # Define headers
+    headers = ["Business Term", "Description", "Data Domain", "Associated Database Columns"]
+
+    # Style for headers
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+    header_alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+
+    # Write headers
+    for col_num, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num)
+        cell.value = header
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = header_alignment
+
+    # Write data
+    for row_num, entry in enumerate(glossary_data, 2):
+        ws.cell(row=row_num, column=1).value = entry.get('business_term', '')
+        ws.cell(row=row_num, column=2).value = entry.get('description', '')
+        ws.cell(row=row_num, column=3).value = entry.get('data_domain', '')
+        ws.cell(row=row_num, column=4).value = entry.get('associated_columns', '')
+
+        # Wrap text for description column
+        ws.cell(row=row_num, column=2).alignment = Alignment(wrap_text=True, vertical="top")
+
+    # Auto-fit column widths
+    for col_num, header in enumerate(headers, 1):
+        column_letter = get_column_letter(col_num)
+        if col_num == 2:  # Description column
+            ws.column_dimensions[column_letter].width = 60
+        elif col_num == 4:  # Associated Columns
+            ws.column_dimensions[column_letter].width = 40
+        else:
+            ws.column_dimensions[column_letter].width = 20
+
+    # Freeze header row
+    ws.freeze_panes = "A2"
+
+    # Add data validation for Data Domain column (optional, for reference)
+    # Note: This doesn't add dropdown in existing cells, but sets validation
+
+    # Save file
+    output_path = os.path.join(app.config['OUTPUT_FOLDER'], filename)
+    wb.save(output_path)
+
+    return output_path
 
 @app.route('/')
 def index():
@@ -368,11 +330,11 @@ def index():
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
+    """Step 1: Upload file and return deduplicated columns with abbreviations"""
     if 'file' not in request.files:
         return jsonify({'error': 'No file provided'}), 400
 
     file = request.files['file']
-    business_context = request.form.get('business_context', 'Information Technology')
 
     if file.filename == '':
         return jsonify({'error': 'No file selected'}), 400
@@ -382,26 +344,83 @@ def upload_file():
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
 
-        # Parse the file
-        file_content = parse_file(filepath)
+        # Extract column names
+        columns = extract_column_names(filepath)
 
-        if file_content is None:
+        if not columns:
             os.remove(filepath)
-            return jsonify({'error': 'Failed to parse file'}), 400
+            return jsonify({'error': 'No columns found in file'}), 400
 
-        # Generate glossary
-        glossary = generate_glossary(file_content, business_context)
+        # Deduplicate
+        deduplicated_columns, duplicates_map = deduplicate_columns(columns)
+
+        # Identify abbreviations needing clarification
+        abbreviations = identify_abbreviations(deduplicated_columns)
 
         # Clean up uploaded file
         os.remove(filepath)
 
         return jsonify({
             'success': True,
-            'glossary': glossary,
-            'context': business_context
+            'columns': deduplicated_columns,
+            'total_columns': len(columns),
+            'deduplicated_count': len(deduplicated_columns),
+            'duplicates_removed': len(columns) - len(deduplicated_columns),
+            'abbreviations': abbreviations,
+            'duplicates_map': duplicates_map
         })
 
     return jsonify({'error': 'Invalid file type'}), 400
+
+@app.route('/generate', methods=['POST'])
+def generate_glossary():
+    """Step 2: Generate glossary with abbreviation clarifications"""
+    data = request.json
+    columns = data.get('columns', [])
+    abbreviation_clarifications = data.get('clarifications', {})
+
+    if not columns:
+        return jsonify({'error': 'No columns provided'}), 400
+
+    # Generate glossary
+    glossary = generate_glossary_with_claude(columns, abbreviation_clarifications)
+
+    # Sort by business term
+    glossary = sorted(glossary, key=lambda x: x.get('business_term', ''))
+
+    return jsonify({
+        'success': True,
+        'glossary': glossary,
+        'total_terms': len(glossary)
+    })
+
+@app.route('/download', methods=['POST'])
+def download_glossary():
+    """Step 3: Create and download XLSX file"""
+    data = request.json
+    glossary = data.get('glossary', [])
+
+    if not glossary:
+        return jsonify({'error': 'No glossary data provided'}), 400
+
+    # Generate filename with timestamp
+    timestamp = datetime.now().strftime('%Y-%m-%d')
+    filename = f"Insurance_Business_Glossary_{timestamp}.xlsx"
+
+    # Create XLSX file
+    try:
+        filepath = create_xlsx_file(glossary, filename)
+
+        # Send file
+        return send_file(
+            filepath,
+            as_attachment=True,
+            download_name=filename,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+    except Exception as e:
+        print(f"Error creating XLSX file: {e}")
+        return jsonify({'error': 'Failed to create XLSX file'}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

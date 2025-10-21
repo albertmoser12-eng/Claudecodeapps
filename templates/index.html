@@ -3,29 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Business Glossary Generator</title>
+    <title>Insurance Business Glossary Generator</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Business Glossary Generator</h1>
-            <p class="subtitle">Upload your data file to automatically generate a comprehensive business glossary</p>
+            <h1>Insurance Business Glossary Generator</h1>
+            <p class="subtitle">Upload database column names to create a comprehensive insurance business glossary</p>
         </header>
 
-        <div class="upload-section">
+        <!-- Step 1: File Upload -->
+        <div class="upload-section" id="uploadSection">
+            <h2>Step 1: Upload Database Column Names</h2>
             <form id="uploadForm" enctype="multipart/form-data">
                 <div class="form-group">
-                    <label for="business_context">Business Context</label>
-                    <select id="business_context" name="business_context" required>
-                        <option value="General Insurance">General Insurance</option>
-                        <option value="Life Insurance">Life Insurance</option>
-                        <option value="Information Technology">Information Technology</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="file">Upload File</label>
+                    <label for="file">Upload File (CSV, Excel, JSON, or TXT)</label>
                     <div class="file-input-wrapper">
                         <input type="file" id="file" name="file" accept=".txt,.csv,.xlsx,.xls,.json" required>
                         <div class="file-input-label">
@@ -33,11 +26,11 @@
                             <span class="file-text">Choose a file or drag it here</span>
                         </div>
                     </div>
-                    <p class="file-info">Supported formats: TXT, CSV, Excel (.xlsx, .xls), JSON</p>
+                    <p class="file-info">Supported formats: TXT (one column name per line), CSV/Excel (column headers), JSON</p>
                 </div>
 
                 <button type="submit" class="btn-primary" id="submitBtn">
-                    <span class="btn-text">Generate Glossary</span>
+                    <span class="btn-text">Upload and Analyze</span>
                     <span class="spinner" style="display: none;"></span>
                 </button>
             </form>
@@ -45,30 +38,90 @@
 
         <div id="errorMessage" class="error-message" style="display: none;"></div>
 
-        <div id="resultsSection" class="results-section" style="display: none;">
+        <!-- Step 2: Deduplication Results and Abbreviation Clarification -->
+        <div id="deduplicationSection" class="section" style="display: none;">
+            <h2>Step 2: Review Deduplication and Clarify Abbreviations</h2>
+
+            <div class="stats-panel">
+                <h3>Deduplication Summary</h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-label">Total Columns:</span>
+                        <span class="stat-value" id="totalColumns">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">After Deduplication:</span>
+                        <span class="stat-value" id="deduplicatedCount">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Duplicates Removed:</span>
+                        <span class="stat-value" id="duplicatesRemoved">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="abbreviationsPanel" style="display: none;">
+                <h3>Abbreviation Clarifications</h3>
+                <p class="help-text">We found the following abbreviations that might have multiple meanings. Please select the correct interpretation:</p>
+                <div id="abbreviationsForm" class="abbreviations-form"></div>
+            </div>
+
+            <div class="action-buttons">
+                <button id="generateBtn" class="btn-primary">
+                    <span class="btn-text">Generate Glossary</span>
+                    <span class="spinner" style="display: none;"></span>
+                </button>
+                <button id="startOverBtn" class="btn-secondary">Start Over</button>
+            </div>
+        </div>
+
+        <!-- Step 3: Glossary Results -->
+        <div id="resultsSection" class="section" style="display: none;">
             <div class="results-header">
                 <h2>Business Glossary Results</h2>
-                <button id="exportBtn" class="btn-secondary">Export to CSV</button>
+                <div class="result-stats">
+                    <span id="termCount">0</span> business terms generated
+                </div>
             </div>
+
+            <div class="action-buttons">
+                <button id="downloadBtn" class="btn-primary">
+                    <span>📥 Download Excel (XLSX)</span>
+                </button>
+                <button id="exportCsvBtn" class="btn-secondary">
+                    <span>📄 Export to CSV</span>
+                </button>
+                <button id="newGlossaryBtn" class="btn-secondary">
+                    <span>🔄 Create New Glossary</span>
+                </button>
+            </div>
+
             <div class="table-wrapper">
                 <table id="glossaryTable">
                     <thead>
                         <tr>
-                            <th>Title</th>
-                            <th>Term Type</th>
-                            <th>Data Domain</th>
+                            <th>Business Term</th>
                             <th>Description</th>
-                            <th>Examples</th>
-                            <th>Business Logic</th>
-                            <th>Data Type</th>
-                            <th>Technical Aliases</th>
-                            <th>Synonyms</th>
-                            <th>Logical Formula</th>
+                            <th>Data Domain</th>
+                            <th>Associated Database Columns</th>
                         </tr>
                     </thead>
                     <tbody id="glossaryBody">
                     </tbody>
                 </table>
+            </div>
+
+            <div class="quality-checklist">
+                <h3>✓ Quality Assurance Checklist</h3>
+                <ul>
+                    <li>All abbreviations have been clarified</li>
+                    <li>No duplicate business terms exist</li>
+                    <li>Each entry has all required fields completed</li>
+                    <li>Descriptions are under 50 words</li>
+                    <li>All database columns are accounted for</li>
+                    <li>Domain classifications are accurate</li>
+                    <li>File format meets specifications</li>
+                </ul>
             </div>
         </div>
     </div>
