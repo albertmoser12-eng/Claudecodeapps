@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Business Glossary Generator</title>
+    <title>Insurance Business Glossary Generator - Standalone</title>
     <style>
         * {
             margin: 0;
@@ -24,6 +24,9 @@
             --text-secondary: #64748b;
             --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
             --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --layer1-color: #dbeafe;
+            --layer2-color: #e0e7ff;
+            --layer3-color: #f3e8ff;
         }
 
         body {
@@ -60,21 +63,18 @@
             opacity: 0.95;
         }
 
-        .badge {
-            display: inline-block;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            margin-top: 10px;
-        }
-
-        .upload-section {
+        .upload-section, .section {
             background: var(--surface);
             padding: 40px;
             border-radius: 12px;
             box-shadow: var(--shadow);
             margin-bottom: 30px;
+        }
+
+        .section h2 {
+            font-size: 1.75rem;
+            color: var(--text-primary);
+            margin-bottom: 25px;
         }
 
         .form-group {
@@ -89,23 +89,6 @@
             font-size: 0.95rem;
         }
 
-        select {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            font-size: 1rem;
-            background: var(--surface);
-            color: var(--text-primary);
-            cursor: pointer;
-            transition: border-color 0.2s;
-        }
-
-        select:focus {
-            outline: none;
-            border-color: var(--primary-color);
-        }
-
         .file-input-wrapper {
             position: relative;
         }
@@ -116,7 +99,6 @@
             width: 100%;
             height: 100%;
             cursor: pointer;
-            z-index: 2;
         }
 
         .file-input-label {
@@ -131,8 +113,7 @@
             transition: all 0.3s;
         }
 
-        .file-input-label:hover,
-        .file-input-label.highlight {
+        .file-input-label:hover {
             border-color: var(--primary-color);
             background: #f0f9ff;
         }
@@ -153,6 +134,13 @@
             color: var(--text-secondary);
         }
 
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
         .btn-primary, .btn-secondary {
             padding: 14px 32px;
             border: none;
@@ -170,7 +158,7 @@
         .btn-primary {
             background: var(--primary-color);
             color: white;
-            width: 100%;
+            flex: 1;
         }
 
         .btn-primary:hover:not(:disabled) {
@@ -215,15 +203,6 @@
             margin-bottom: 20px;
         }
 
-        .success-message {
-            background: #d1fae5;
-            border: 1px solid var(--success-color);
-            color: #065f46;
-            padding: 16px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-
         .results-section {
             background: var(--surface);
             padding: 30px;
@@ -245,66 +224,212 @@
             color: var(--text-primary);
         }
 
-        .table-wrapper {
-            overflow-x: auto;
-            border-radius: 8px;
+        .result-stats {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+        }
+
+        /* Glossary Cards with Three-Layer Structure */
+        .glossary-results {
+            display: grid;
+            gap: 25px;
+        }
+
+        .glossary-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: box-shadow 0.3s, transform 0.3s;
+        }
+
+        .glossary-card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .card-header h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .domain-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Layer Sections */
+        .layer-section {
+            padding: 20px 25px;
+            border-left: 4px solid transparent;
+        }
+
+        .layer-section.layer-1 {
+            background: var(--layer1-color);
+            border-left-color: #3b82f6;
+        }
+
+        .layer-section.layer-2 {
+            background: var(--layer2-color);
+            border-left-color: #6366f1;
+        }
+
+        .layer-section.layer-3 {
+            background: var(--layer3-color);
+            border-left-color: #a855f7;
+        }
+
+        .layer-label {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .layer-label.collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .layer-label.collapsible:hover {
+            color: var(--primary-color);
+        }
+
+        .toggle-icon {
+            font-size: 0.75rem;
+            transition: transform 0.3s;
+        }
+
+        .layer-content {
+            font-size: 1rem;
+            line-height: 1.7;
+            color: var(--text-primary);
+        }
+
+        .layer-content p {
+            margin: 0;
+        }
+
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .collapsible-content.expanded {
+            max-height: 500px;
+            padding-top: 10px;
+        }
+
+        /* Additional Info Section */
+        .additional-info {
+            padding: 20px 25px;
+            background: var(--background);
+            border-top: 1px solid var(--border);
+        }
+
+        .info-item {
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+        }
+
+        .info-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .info-item strong {
+            color: var(--text-primary);
+            margin-right: 8px;
+        }
+
+        .tag {
+            display: inline-block;
+            background: var(--primary-color);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            margin-right: 6px;
+            margin-bottom: 4px;
+        }
+
+        code {
+            background: #f1f5f9;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            color: #e11d48;
             border: 1px solid var(--border);
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: var(--surface);
+        /* Quality Checklist */
+        .quality-checklist {
+            margin-top: 40px;
+            padding: 25px;
+            background: #f0fdf4;
+            border: 1px solid #86efac;
+            border-radius: 12px;
         }
 
-        thead {
-            background: #f1f5f9;
+        .quality-checklist h3 {
+            font-size: 1.25rem;
+            color: #15803d;
+            margin-bottom: 15px;
         }
 
-        th {
-            padding: 16px;
-            text-align: left;
-            font-weight: 600;
-            color: var(--text-primary);
-            border-bottom: 2px solid var(--border);
-            white-space: nowrap;
-            font-size: 0.9rem;
-        }
-
-        td {
-            padding: 16px;
-            border-bottom: 1px solid var(--border);
+        .quality-checklist p {
             color: var(--text-secondary);
-            font-size: 0.9rem;
+            margin-bottom: 15px;
         }
 
-        tbody tr:hover {
-            background: var(--background);
+        .quality-checklist ul {
+            list-style: none;
+            padding-left: 0;
         }
 
-        tbody tr:last-child td {
-            border-bottom: none;
+        .quality-checklist li {
+            padding: 8px 0 8px 30px;
+            position: relative;
+            color: var(--text-primary);
         }
 
-        .info-box {
-            background: #dbeafe;
-            border-left: 4px solid var(--primary-color);
-            padding: 16px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+        .quality-checklist li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--success-color);
+            font-weight: 700;
+            font-size: 1.2rem;
         }
 
-        .info-box p {
-            margin: 0;
-            color: #1e40af;
-        }
-
+        /* Responsive Design */
         @media (max-width: 768px) {
             header h1 {
                 font-size: 1.75rem;
             }
 
-            .upload-section {
+            .upload-section, .section {
                 padding: 20px;
             }
 
@@ -317,8 +442,22 @@
                 align-items: flex-start;
             }
 
-            .btn-secondary {
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .btn-primary, .btn-secondary {
                 width: 100%;
+            }
+
+            .card-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .domain-badge {
+                align-self: flex-start;
             }
         }
     </style>
@@ -326,28 +465,16 @@
 <body>
     <div class="container">
         <header>
-            <h1>Business Glossary Generator</h1>
-            <p class="subtitle">Upload your data file to automatically generate a comprehensive business glossary</p>
-            <span class="badge">Standalone HTML Version</span>
+            <h1>Insurance Business Glossary Generator</h1>
+            <p class="subtitle">Standalone HTML version - Upload database column names to create a comprehensive insurance business glossary with three-layer definitions</p>
         </header>
 
-        <div class="info-box">
-            <p><strong>Note:</strong> This is a standalone HTML version that runs entirely in your browser. No server required! File processing happens locally.</p>
-        </div>
-
-        <div class="upload-section">
+        <!-- Upload Section -->
+        <div class="upload-section" id="uploadSection">
+            <h2>Upload Database Column Names</h2>
             <form id="uploadForm">
                 <div class="form-group">
-                    <label for="business_context">Business Context</label>
-                    <select id="business_context" name="business_context" required>
-                        <option value="General Insurance">General Insurance</option>
-                        <option value="Life Insurance">Life Insurance</option>
-                        <option value="Information Technology">Information Technology</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="file">Upload File</label>
+                    <label for="file">Upload File (CSV, JSON, or TXT)</label>
                     <div class="file-input-wrapper">
                         <input type="file" id="file" name="file" accept=".txt,.csv,.json" required>
                         <div class="file-input-label">
@@ -355,7 +482,7 @@
                             <span class="file-text">Choose a file or drag it here</span>
                         </div>
                     </div>
-                    <p class="file-info">Supported formats: TXT, CSV, JSON (Excel requires backend)</p>
+                    <p class="file-info">Supported formats: TXT (one column name per line), CSV (column headers), JSON</p>
                 </div>
 
                 <button type="submit" class="btn-primary" id="submitBtn">
@@ -366,804 +493,71 @@
         </div>
 
         <div id="errorMessage" class="error-message" style="display: none;"></div>
-        <div id="successMessage" class="success-message" style="display: none;"></div>
 
+        <!-- Results Section -->
         <div id="resultsSection" class="results-section" style="display: none;">
             <div class="results-header">
                 <h2>Business Glossary Results</h2>
-                <button id="exportBtn" class="btn-secondary">Export to CSV</button>
+                <div class="result-stats">
+                    <span id="termCount">0</span> business terms generated
+                </div>
             </div>
-            <div class="table-wrapper">
-                <table id="glossaryTable">
-                    <thead>
-                        <tr>
-                            <th>Title</th>
-                            <th>Term Type</th>
-                            <th>Data Domain</th>
-                            <th>Description</th>
-                            <th>Examples</th>
-                            <th>Business Logic</th>
-                            <th>Data Type</th>
-                            <th>Technical Aliases</th>
-                            <th>Synonyms</th>
-                            <th>Logical Formula</th>
-                        </tr>
-                    </thead>
-                    <tbody id="glossaryBody">
-                    </tbody>
-                </table>
+
+            <div class="action-buttons">
+                <button id="exportCsvBtn" class="btn-primary">
+                    <span>📄 Export to CSV</span>
+                </button>
+                <button id="newGlossaryBtn" class="btn-secondary">
+                    <span>🔄 Create New Glossary</span>
+                </button>
+            </div>
+
+            <div id="glossaryResults" class="glossary-results">
+                <!-- Terms will be rendered here as cards -->
+            </div>
+
+            <div class="quality-checklist">
+                <h3>✓ Quality Assurance Checklist</h3>
+                <p>Each definition follows the three-layer structure from glossary_instructions.md:</p>
+                <ul>
+                    <li><strong>Layer 1: Business Definition</strong> - Plain language, understandable to non-technical stakeholders</li>
+                    <li><strong>Layer 2: Business Context</strong> - Why it matters, business processes, relationships</li>
+                    <li><strong>Layer 3: Technical Bridge</strong> - System mapping for technical teams (optional)</li>
+                    <li>No circular definitions</li>
+                    <li>No unexplained acronyms</li>
+                    <li>Terms defined without requiring other term lookups first</li>
+                    <li>Scope and boundaries are clear</li>
+                    <li>Dates specify exactly which event they represent</li>
+                    <li>Relationships and cardinality mentioned when relevant</li>
+                </ul>
             </div>
         </div>
     </div>
 
     <script>
-        // Glossary data templates
-        const glossaryTemplates = {
-            "General Insurance": [
-                {
-                    "title": "Premium",
-                    "term_type": "Business term",
-                    "data_domain": "Financial",
-                    "description": "The amount paid by the policyholder to the insurance company for coverage",
-                    "examples": "Monthly premium: $150, Annual premium: $1,800",
-                    "business_logic": "Calculated based on risk factors, coverage amount, and policy term",
-                    "data_type": "Currency/Decimal",
-                    "technical_aliases": "premium_amount, policy_premium, prem_amt",
-                    "synonyms": "Insurance Premium, Policy Payment",
-                    "logical_formula": ""
-                },
-                {
-                    "title": "Claim Amount",
-                    "term_type": "Business term",
-                    "data_domain": "Claim",
-                    "description": "The monetary value requested or paid for an insurance claim",
-                    "examples": "Claim for vehicle damage: $5,000, Medical claim: $2,500",
-                    "business_logic": "Must not exceed policy coverage limits; subject to deductibles",
-                    "data_type": "Currency/Decimal",
-                    "technical_aliases": "claim_amt, paid_amount, settlement_amount",
-                    "synonyms": "Settlement Amount, Claim Payment, Payout",
-                    "logical_formula": ""
-                },
-                {
-                    "title": "Loss Ratio",
-                    "term_type": "Business metric",
-                    "data_domain": "Financial",
-                    "description": "The ratio of claims paid to premiums earned",
-                    "examples": "Loss Ratio of 0.75 means 75% of premiums are paid out as claims",
-                    "business_logic": "Used to measure profitability and pricing adequacy of insurance products",
-                    "data_type": "Decimal/Percentage",
-                    "technical_aliases": "loss_ratio, claims_ratio",
-                    "synonyms": "Claims Ratio, Incurred Loss Ratio",
-                    "logical_formula": "(Total Claims Paid / Total Premiums Earned) * 100"
-                },
-                {
-                    "title": "Deductible",
-                    "term_type": "Business term",
-                    "data_domain": "Policy",
-                    "description": "The amount the policyholder must pay before insurance coverage begins",
-                    "examples": "$500 deductible, $1,000 deductible",
-                    "business_logic": "Higher deductibles typically result in lower premiums",
-                    "data_type": "Currency/Decimal",
-                    "technical_aliases": "deductible_amount, ded_amt",
-                    "synonyms": "Out-of-Pocket Amount, Excess",
-                    "logical_formula": ""
-                }
-            ],
-            "Life Insurance": [
-                {
-                    "title": "Sum Assured",
-                    "term_type": "Business term",
-                    "data_domain": "Policy",
-                    "description": "The guaranteed amount payable to beneficiaries upon death or maturity",
-                    "examples": "Life cover: $500,000, Term insurance sum assured: $1,000,000",
-                    "business_logic": "Determined at policy inception based on income, needs, and underwriting",
-                    "data_type": "Currency/Decimal",
-                    "technical_aliases": "coverage_amount, death_benefit, face_amount",
-                    "synonyms": "Death Benefit, Coverage Amount, Face Value",
-                    "logical_formula": ""
-                },
-                {
-                    "title": "Surrender Value",
-                    "term_type": "Business metric",
-                    "data_domain": "Financial",
-                    "description": "The amount payable to the policyholder if the policy is terminated before maturity",
-                    "examples": "After 5 years, surrender value: $12,000",
-                    "business_logic": "Calculated based on premiums paid, policy duration, and surrender charges",
-                    "data_type": "Currency/Decimal",
-                    "technical_aliases": "cash_surrender_value, csv, surrender_amt",
-                    "synonyms": "Cash Value, Termination Value",
-                    "logical_formula": "Total Premiums Paid - Surrender Charges - Policy Fees"
-                },
-                {
-                    "title": "Mortality Rate",
-                    "term_type": "Business metric",
-                    "data_domain": "Actuarial",
-                    "description": "The probability of death within a specified age group",
-                    "examples": "Mortality rate for age 40-45: 0.002 (0.2%)",
-                    "business_logic": "Used for premium calculation and reserves estimation",
-                    "data_type": "Decimal/Percentage",
-                    "technical_aliases": "death_rate, mortality_prob",
-                    "synonyms": "Death Rate, Mortality Probability",
-                    "logical_formula": "Number of Deaths / Total Population in Age Group"
-                },
-                {
-                    "title": "Policy Term",
-                    "term_type": "Business term",
-                    "data_domain": "Policy",
-                    "description": "The duration for which the insurance coverage is valid",
-                    "examples": "20-year term, 30-year term, Whole life (lifetime)",
-                    "business_logic": "Defines the period of coverage and premium payment duration",
-                    "data_type": "Integer/Years",
-                    "technical_aliases": "coverage_period, term_years",
-                    "synonyms": "Coverage Period, Policy Duration",
-                    "logical_formula": ""
-                }
-            ],
-            "Information Technology": [
-                {
-                    "title": "User ID",
-                    "term_type": "Business term",
-                    "data_domain": "User Management",
-                    "description": "Unique identifier assigned to each system user",
-                    "examples": "U123456, user@example.com, EMP001",
-                    "business_logic": "Must be unique across the system; used for authentication and audit trails",
-                    "data_type": "String/VARCHAR",
-                    "technical_aliases": "user_id, uid, username, login_id",
-                    "synonyms": "Username, Login ID, Account ID",
-                    "logical_formula": ""
-                },
-                {
-                    "title": "Session Duration",
-                    "term_type": "Business term",
-                    "data_domain": "Security",
-                    "description": "The length of time a user remains actively logged into the system",
-                    "examples": "Average session: 45 minutes, Timeout: 30 minutes",
-                    "business_logic": "Tracked for security and usage analytics; sessions expire after inactivity",
-                    "data_type": "Integer/Time",
-                    "technical_aliases": "session_time, login_duration, active_time",
-                    "synonyms": "Login Duration, Active Time, Session Length",
-                    "logical_formula": ""
-                },
-                {
-                    "title": "System Uptime",
-                    "term_type": "Business metric",
-                    "data_domain": "Infrastructure",
-                    "description": "Percentage of time the system is operational and accessible",
-                    "examples": "99.9% uptime, 99.99% availability",
-                    "business_logic": "Calculated excluding planned maintenance; key SLA metric",
-                    "data_type": "Percentage/Decimal",
-                    "technical_aliases": "availability, uptime_pct, system_availability",
-                    "synonyms": "Availability, Service Uptime, System Availability",
-                    "logical_formula": "(Total Time - Downtime) / Total Time * 100"
-                },
-                {
-                    "title": "Response Time",
-                    "term_type": "Business metric",
-                    "data_domain": "Performance",
-                    "description": "Time taken for the system to respond to a user request",
-                    "examples": "Average response time: 250ms, Peak: 500ms",
-                    "business_logic": "Key performance indicator; should be minimized for better user experience",
-                    "data_type": "Integer/Milliseconds",
-                    "technical_aliases": "latency, response_time_ms, rt",
-                    "synonyms": "Latency, Request Time, API Response Time",
-                    "logical_formula": "Request End Time - Request Start Time"
-                }
-            ]
-        };
-
-        let currentGlossaryData = [];
+        // Global state
+        let currentGlossary = [];
 
         // DOM elements
         const uploadForm = document.getElementById('uploadForm');
         const fileInput = document.getElementById('file');
-        const fileLabel = document.querySelector('.file-text');
         const submitBtn = document.getElementById('submitBtn');
-        const btnText = document.querySelector('.btn-text');
-        const spinner = document.querySelector('.spinner');
         const errorMessage = document.getElementById('errorMessage');
-        const successMessage = document.getElementById('successMessage');
+        const uploadSection = document.getElementById('uploadSection');
         const resultsSection = document.getElementById('resultsSection');
-        const glossaryBody = document.getElementById('glossaryBody');
-        const exportBtn = document.getElementById('exportBtn');
-        const businessContext = document.getElementById('business_context');
+        const glossaryResults = document.getElementById('glossaryResults');
+        const termCountEl = document.getElementById('termCount');
+        const exportCsvBtn = document.getElementById('exportCsvBtn');
+        const newGlossaryBtn = document.getElementById('newGlossaryBtn');
 
-        // Update file label when file is selected
-        fileInput.addEventListener('change', function(e) {
-            if (e.target.files.length > 0) {
-                fileLabel.textContent = e.target.files[0].name;
-            } else {
-                fileLabel.textContent = 'Choose a file or drag it here';
-            }
+        // File input visual feedback
+        fileInput.addEventListener('change', (e) => {
+            const fileName = e.target.files[0]?.name || 'Choose a file or drag it here';
+            document.querySelector('.file-text').textContent = fileName;
         });
 
-        // Parse CSV content
-        function parseCSV(content) {
-            const lines = content.split('\n').filter(line => line.trim());
-            if (lines.length === 0) return [];
-
-            const headers = lines[0].split(',').map(h => h.trim());
-            const data = [];
-
-            for (let i = 1; i < lines.length; i++) {
-                const values = lines[i].split(',').map(v => v.trim());
-                const row = {};
-                headers.forEach((header, index) => {
-                    row[header] = values[index] || '';
-                });
-                data.push(row);
-            }
-
-            return { headers, data };
-        }
-
-        // Parse JSON content
-        function parseJSON(content) {
-            try {
-                return JSON.parse(content);
-            } catch (e) {
-                throw new Error('Invalid JSON format');
-            }
-        }
-
-        // Generate glossary from file content
-        function generateGlossaryFromContent(content, fileType, context) {
-            let parsedData;
-            let terms = [];
-
-            try {
-                if (fileType === 'csv') {
-                    parsedData = parseCSV(content);
-                    // Extract LINE ITEMS (rows) and create glossary entries
-                    if (parsedData.data && parsedData.data.length > 0) {
-                        parsedData.data.forEach((row, index) => {
-                            // Try to extract term information from the row
-                            const termInfo = extractTermFromRow(row, parsedData.headers, context);
-                            if (termInfo) {
-                                terms.push(termInfo);
-                            }
-                        });
-                    }
-                } else if (fileType === 'json') {
-                    parsedData = parseJSON(content);
-                    terms = extractTermsFromJSON(parsedData, context);
-                } else if (fileType === 'txt') {
-                    terms = extractTermsFromText(content, context);
-                }
-
-                // If we couldn't extract enough terms, use template
-                if (terms.length < 2) {
-                    return glossaryTemplates[context] || glossaryTemplates["Information Technology"];
-                }
-
-                return terms;
-            } catch (e) {
-                console.error('Error generating glossary:', e);
-                return glossaryTemplates[context] || glossaryTemplates["Information Technology"];
-            }
-        }
-
-        // Extract term information from a data row
-        function extractTermFromRow(row, headers, context) {
-            // Look for common column patterns for term name
-            const nameColumns = ['term', 'title', 'name', 'field', 'metric', 'concept', 'item'];
-            const descColumns = ['description', 'definition', 'desc', 'meaning', 'explanation'];
-            const exampleColumns = ['example', 'examples', 'sample', 'samples', 'sample_value', 'sample_values'];
-            const logicColumns = ['logic', 'business_logic', 'rules', 'business_rules', 'validation'];
-            const typeColumns = ['type', 'data_type', 'datatype', 'format'];
-            const aliasColumns = ['alias', 'aliases', 'technical_alias', 'technical_aliases', 'alt_name'];
-            const synonymColumns = ['synonym', 'synonyms', 'alt_names', 'alternative_names'];
-            const formulaColumns = ['formula', 'calculation', 'logical_formula', 'calc'];
-
-            const lowerHeaders = headers.map(h => h.toLowerCase());
-
-            // Find the term name
-            let termName = '';
-            for (let col of nameColumns) {
-                const idx = lowerHeaders.indexOf(col);
-                if (idx !== -1 && row[headers[idx]]) {
-                    termName = row[headers[idx]];
-                    break;
-                }
-            }
-
-            // If no term name found, try the first column
-            if (!termName && row[headers[0]]) {
-                termName = row[headers[0]];
-            }
-
-            if (!termName) return null;
-
-            // Find description
-            let description = '';
-            for (let col of descColumns) {
-                const idx = lowerHeaders.indexOf(col);
-                if (idx !== -1 && row[headers[idx]]) {
-                    description = row[headers[idx]];
-                    break;
-                }
-            }
-            if (!description) {
-                description = generateDescription(termName, context);
-            }
-
-            // Find examples
-            let examples = '';
-            for (let col of exampleColumns) {
-                const idx = lowerHeaders.indexOf(col);
-                if (idx !== -1 && row[headers[idx]]) {
-                    examples = row[headers[idx]];
-                    break;
-                }
-            }
-            if (!examples) {
-                examples = generateExamples(termName, context);
-            }
-
-            // Find business logic
-            let businessLogic = '';
-            for (let col of logicColumns) {
-                const idx = lowerHeaders.indexOf(col);
-                if (idx !== -1 && row[headers[idx]]) {
-                    businessLogic = row[headers[idx]];
-                    break;
-                }
-            }
-            if (!businessLogic) {
-                businessLogic = generateBusinessLogic(termName, context);
-            }
-
-            // Find data type
-            let dataType = '';
-            for (let col of typeColumns) {
-                const idx = lowerHeaders.indexOf(col);
-                if (idx !== -1 && row[headers[idx]]) {
-                    dataType = row[headers[idx]];
-                    break;
-                }
-            }
-            if (!dataType) {
-                dataType = inferDataType(termName, [row]);
-            }
-
-            // Find technical aliases
-            let aliases = '';
-            for (let col of aliasColumns) {
-                const idx = lowerHeaders.indexOf(col);
-                if (idx !== -1 && row[headers[idx]]) {
-                    aliases = row[headers[idx]];
-                    break;
-                }
-            }
-            if (!aliases) {
-                aliases = generateAliases(termName);
-            }
-
-            // Find synonyms
-            let synonyms = '';
-            for (let col of synonymColumns) {
-                const idx = lowerHeaders.indexOf(col);
-                if (idx !== -1 && row[headers[idx]]) {
-                    synonyms = row[headers[idx]];
-                    break;
-                }
-            }
-            if (!synonyms) {
-                synonyms = generateSynonyms(termName);
-            }
-
-            // Find formula
-            let formula = '';
-            for (let col of formulaColumns) {
-                const idx = lowerHeaders.indexOf(col);
-                if (idx !== -1 && row[headers[idx]]) {
-                    formula = row[headers[idx]];
-                    break;
-                }
-            }
-            if (!formula && isMetric(termName)) {
-                formula = generateFormula(termName);
-            }
-
-            return {
-                title: formatBusinessTitle(termName),
-                term_type: determineTermType(termName, formula),
-                data_domain: assignDataDomain(termName, context),
-                description: description,
-                examples: examples,
-                business_logic: businessLogic,
-                data_type: dataType,
-                technical_aliases: aliases,
-                synonyms: synonyms,
-                logical_formula: formula
-            };
-        }
-
-        // Helper functions
-        function formatFieldName(name) {
-            return name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-        }
-
-        function formatBusinessTitle(name) {
-            // Convert to business-oriented title (typically 2 words, no underscores)
-            return name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()).trim();
-        }
-
-        function determineTermType(termName, formula) {
-            // Classify as "Business term" or "Business metric"
-            const lowerTerm = termName.toLowerCase();
-            const metricKeywords = ['ratio', 'rate', 'percentage', 'count', 'total', 'number', 'sum', 'average', 'mean', 'duration', 'time', 'uptime'];
-
-            if (formula) return 'Business metric';  // Has formula = metric
-            if (metricKeywords.some(keyword => lowerTerm.includes(keyword))) return 'Business metric';
-            return 'Business term';
-        }
-
-        function assignDataDomain(termName, context) {
-            // Assign context-specific data domain
-            const lowerTerm = termName.toLowerCase();
-
-            if (context === 'General Insurance') {
-                if (lowerTerm.includes('claim')) return 'Claim';
-                if (lowerTerm.includes('policy') || lowerTerm.includes('coverage')) return 'Policy';
-                if (lowerTerm.includes('customer') || lowerTerm.includes('holder')) return 'Customer';
-                if (lowerTerm.includes('premium') || lowerTerm.includes('financial') || lowerTerm.includes('ratio')) return 'Financial';
-                if (lowerTerm.includes('risk') || lowerTerm.includes('underwriting')) return 'Underwriting';
-                return 'Policy';
-            } else if (context === 'Life Insurance') {
-                if (lowerTerm.includes('policy') || lowerTerm.includes('term') || lowerTerm.includes('assured')) return 'Policy';
-                if (lowerTerm.includes('customer') || lowerTerm.includes('holder') || lowerTerm.includes('insured')) return 'Customer';
-                if (lowerTerm.includes('premium') || lowerTerm.includes('value') || lowerTerm.includes('financial') || lowerTerm.includes('ratio')) return 'Financial';
-                if (lowerTerm.includes('mortality') || lowerTerm.includes('actuarial')) return 'Actuarial';
-                if (lowerTerm.includes('benefit') || lowerTerm.includes('maturity')) return 'Benefits';
-                return 'Policy';
-            } else { // Information Technology
-                if (lowerTerm.includes('user') || lowerTerm.includes('login') || lowerTerm.includes('account')) return 'User Management';
-                if (lowerTerm.includes('session') || lowerTerm.includes('auth') || lowerTerm.includes('security')) return 'Security';
-                if (lowerTerm.includes('response') || lowerTerm.includes('latency') || lowerTerm.includes('performance') || lowerTerm.includes('cpu') || lowerTerm.includes('memory')) return 'Performance';
-                if (lowerTerm.includes('uptime') || lowerTerm.includes('availability') || lowerTerm.includes('infrastructure') || lowerTerm.includes('server')) return 'Infrastructure';
-                if (lowerTerm.includes('api') || lowerTerm.includes('application') || lowerTerm.includes('endpoint')) return 'Application';
-                if (lowerTerm.includes('data') || lowerTerm.includes('database') || lowerTerm.includes('storage')) return 'Data';
-                return 'Application';
-            }
-        }
-
-        function generateDescription(fieldName, context) {
-            const lowerField = fieldName.toLowerCase();
-
-            // Generate semantic, purpose-driven descriptions
-            if (lowerField.includes('premium') && lowerField.includes('amount')) {
-                return 'The total premium charged to the policyholder for insurance coverage, calculated based on risk assessment and policy terms, representing the primary revenue source for insurance operations.';
-            }
-            if (lowerField.includes('premium')) {
-                return 'The periodic payment made by the policyholder to maintain insurance coverage, determined through underwriting assessment of risk factors and coverage requirements.';
-            }
-            if (lowerField.includes('claim') && lowerField.includes('amount')) {
-                return 'The monetary value of a claim representing requested or approved payment for a covered loss, assessed by claims adjusters against policy terms and subject to deductibles and coverage limits.';
-            }
-            if (lowerField.includes('claim')) {
-                return 'A formal request for payment under an insurance policy for a covered loss or event, requiring documentation and adjudication to determine settlement amount.';
-            }
-            if (lowerField.includes('loss') && lowerField.includes('ratio')) {
-                return 'A key profitability metric measuring the proportion of premium income paid out as claims, used to evaluate underwriting performance and pricing adequacy.';
-            }
-            if (lowerField.includes('status')) {
-                return 'The current state indicating whether the record is active, inactive, or in transition, determining operational processing and business rule application.';
-            }
-            if (lowerField.includes('policy') && lowerField.includes('number')) {
-                return 'A unique identifier assigned to each insurance policy for tracking, reference, and transaction processing across all insurance operations.';
-            }
-            if (lowerField.includes('user') && lowerField.includes('id')) {
-                return 'A unique identifier assigned to each system user for authentication, authorization, and audit trail purposes across all application modules.';
-            }
-            if (lowerField.includes('session') && lowerField.includes('duration')) {
-                return 'The elapsed time between user login and logout measuring how long a user maintains an active session, used for engagement analysis and security monitoring.';
-            }
-            if (lowerField.includes('uptime') || lowerField.includes('availability')) {
-                return 'The percentage of time the system is fully operational and accessible, calculated as a Service Level Agreement indicator measuring reliability and performance.';
-            }
-            if (lowerField.includes('response') && lowerField.includes('time')) {
-                return 'The time elapsed between receiving a request and sending a complete response, measuring system performance and used to ensure optimal user experience.';
-            }
-            if (lowerField.includes('count') || lowerField.includes('total') || lowerField.includes('number')) {
-                const entity = fieldName.toLowerCase().replace(/count|total|number|of/g, '').trim();
-                return `The total count of ${entity || 'records'} with unique identifiers, used to monitor data completeness and analyze operational metrics.`;
-            }
-            if (lowerField.includes('date') || lowerField.includes('datetime') || lowerField.includes('timestamp')) {
-                const action = fieldName.toLowerCase().includes('start') ? 'commencement' :
-                              fieldName.toLowerCase().includes('end') ? 'completion' : 'occurrence';
-                return `A timestamp recording the ${action} of the business event or transaction, used for temporal analysis and business process tracking.`;
-            }
-            if (lowerField.includes('amount') || lowerField.includes('value')) {
-                return 'A monetary or numeric value representing a financial transaction or measurement, subject to validation rules and used in calculations and reporting.';
-            }
-            if (lowerField.includes('id') || lowerField.includes('identifier')) {
-                return 'A unique identifier ensuring record uniqueness and enabling accurate reference, tracking, and relationship management across the system.';
-            }
-
-            // Default semantic description without generic phrases
-            return `A data element capturing ${fieldName.toLowerCase().replace(/_/g, ' ')} information for business operations and decision-making.`;
-        }
-
-        function generateExamples(termName, context) {
-            const lowerTerm = termName.toLowerCase();
-
-            // Generate actual database values as examples
-            if (lowerTerm.includes('premium') && lowerTerm.includes('amount')) {
-                return '$1,250.00, $3,450.50, $875.25';
-            }
-            if (lowerTerm.includes('claim') && lowerTerm.includes('amount')) {
-                return '$5,250.00, $15,000.00, $2,450.75';
-            }
-            if (lowerTerm.includes('ratio') || lowerTerm.includes('percentage') || lowerTerm.includes('rate')) {
-                return '0.67, 0.85, 0.92, 1.12';
-            }
-            if (lowerTerm.includes('policy') && (lowerTerm.includes('number') || lowerTerm.includes('id'))) {
-                return 'POL-2024-001, INS-GEN-12345, P00123456';
-            }
-            if (lowerTerm.includes('status')) {
-                return 'active, inactive, pending, expired, cancelled';
-            }
-            if (lowerTerm.includes('user') && lowerTerm.includes('id')) {
-                return 'USR-000123, EMP-045678, user.john@example.com';
-            }
-            if (lowerTerm.includes('session')) {
-                return '45, 120, 15, 240';
-            }
-            if (lowerTerm.includes('response') || lowerTerm.includes('latency')) {
-                return '125, 350, 89, 1250';
-            }
-            if (lowerTerm.includes('uptime') || lowerTerm.includes('availability')) {
-                return '99.95, 99.87, 100.00, 99.50';
-            }
-            if (lowerTerm.includes('date') && lowerTerm.includes('start')) {
-                return '2024-01-01, 2024-03-15, 2023-07-01';
-            }
-            if (lowerTerm.includes('date') && lowerTerm.includes('end')) {
-                return '2025-01-01, 2026-03-15, 2024-12-31';
-            }
-            if (lowerTerm.includes('date')) {
-                return '2024-01-15, 2024-06-30, 2023-12-31';
-            }
-            if (lowerTerm.includes('count') || lowerTerm.includes('total') || lowerTerm.includes('number')) {
-                return '2500, 15342, 8750, 150';
-            }
-            if (lowerTerm.includes('amount') || lowerTerm.includes('value') || lowerTerm.includes('sum')) {
-                return '$150,000.00, $2,500.00, $75,450.50';
-            }
-            if (lowerTerm.includes('duration') || lowerTerm.includes('time') || lowerTerm.includes('period')) {
-                return '30, 60, 90, 120';
-            }
-            if (lowerTerm.includes('term') || lowerTerm.includes('years')) {
-                return '10, 20, 25, 30';
-            }
-
-            // Default: generic numeric values
-            return '100, 250, 500, 1000';
-        }
-
-        function generateBusinessLogic(fieldName, context) {
-            const lowerField = fieldName.toLowerCase();
-
-            // Generate specific validation rules and business constraints
-            if (lowerField.includes('end') && lowerField.includes('date')) {
-                return 'Must be after start date; minimum duration requirements apply; cannot be in the past for active records; updates require approval workflow';
-            }
-            if (lowerField.includes('start') && lowerField.includes('date')) {
-                return 'Must be before end date; cannot be more than 90 days in the future; required for all active records; cannot be changed after record activation';
-            }
-            if (lowerField.includes('date')) {
-                return 'Must be valid date format; cannot be future-dated for completed transactions; required for all records; used for reporting and compliance';
-            }
-            if (lowerField.includes('premium') && lowerField.includes('amount')) {
-                return 'Must be greater than $0; cannot be modified after policy issuance without underwriting approval; annual premium must equal sum of installment payments if payment plan selected';
-            }
-            if (lowerField.includes('claim') && lowerField.includes('amount')) {
-                return 'Must be greater than $0; cannot exceed policy coverage limit minus deductible; requires supporting documentation for amounts over $10,000; must be validated against policy effective dates';
-            }
-            if (lowerField.includes('ratio') || lowerField.includes('percentage')) {
-                const name = lowerField.includes('loss') ? 'loss ratio' : lowerField.includes('persistency') ? 'persistency ratio' : 'metric';
-                const threshold = lowerField.includes('loss') ? '1.0' : '0.80';
-                return `Must be greater than or equal to 0; values above ${threshold} trigger business review; calculated monthly and year-to-date; excludes non-qualifying records`;
-            }
-            if (lowerField.includes('status')) {
-                return 'Must be one of predefined enumeration values; only specific statuses allow processing; status changes require approval workflow; cannot revert to previous state without authorization';
-            }
-            if (lowerField.includes('policy') && lowerField.includes('number')) {
-                return 'Must be unique across all policies; cannot be null or empty; follows specific format pattern; cannot be changed after creation; used as primary reference key';
-            }
-            if (lowerField.includes('user') && lowerField.includes('id')) {
-                return 'Must be unique across all users; cannot be null or empty; length between 6 and 50 characters; cannot be changed after creation; must persist even after deactivation for audit history';
-            }
-            if (lowerField.includes('session') && lowerField.includes('duration')) {
-                return 'Must be greater than 0; maximum session duration is 480 minutes (8 hours); sessions exceeding 30 minutes of inactivity are automatically terminated; calculated only for authenticated sessions';
-            }
-            if (lowerField.includes('uptime') || lowerField.includes('availability')) {
-                return 'Must be between 0 and 100; calculated hourly, daily, and monthly; excludes planned maintenance windows; SLA target is 99.9% monthly; values below 99.5% trigger investigation';
-            }
-            if (lowerField.includes('response') && lowerField.includes('time')) {
-                return 'Must be greater than 0; target is under 200ms for 95th percentile; responses exceeding 2000ms trigger performance alerts; calculated only for successful responses';
-            }
-            if (lowerField.includes('count') || lowerField.includes('total') || lowerField.includes('number')) {
-                return 'Must be greater than or equal to 0; calculated from unique identifiers only; updated in real-time or batch processing; used for operational metrics and reporting';
-            }
-            if (lowerField.includes('id') || lowerField.includes('identifier')) {
-                return 'Must be unique across all records; cannot be null or empty; follows system naming convention; immutable after creation; required for all entity instances';
-            }
-            if (lowerField.includes('amount') || lowerField.includes('value')) {
-                return 'Must be non-negative for most scenarios; precision and scale defined by business rules; required for financial transactions; subject to audit and reconciliation processes';
-            }
-            if (lowerField.includes('term') || (lowerField.includes('duration') && !lowerField.includes('session'))) {
-                return 'Must be within minimum and maximum bounds; cannot be modified after contract initiation; determines payment schedule and obligations; validated against age and other constraints';
-            }
-
-            // Default: specific generic rules (avoid "governed by" language)
-            return 'Must meet data type and format requirements; required for record completeness; validated during data entry; used in business processing and reporting';
-        }
-
-        function inferDataType(fieldName, data) {
-            const lowerField = fieldName.toLowerCase();
-            if (lowerField.includes('id')) return 'String/VARCHAR';
-            if (lowerField.includes('date')) return 'Date/Timestamp';
-            if (lowerField.includes('amount') || lowerField.includes('price') || lowerField.includes('value')) return 'Decimal/Currency';
-            if (lowerField.includes('count') || lowerField.includes('number')) return 'Integer';
-            if (lowerField.includes('status') || lowerField.includes('type')) return 'String/Enum';
-
-            // Try to infer from sample data
-            if (data && data.length > 0) {
-                const sample = data[0][fieldName];
-                if (sample && !isNaN(sample)) {
-                    return sample.includes('.') ? 'Decimal' : 'Integer';
-                }
-            }
-
-            return 'String/VARCHAR';
-        }
-
-        function generateAliases(fieldName) {
-            const snake = fieldName.toLowerCase().replace(/\s+/g, '_');
-            const camel = fieldName.replace(/\s+(.)/g, (_, c) => c.toUpperCase()).replace(/\s/g, '');
-            const abbrev = fieldName.split(/\s+/).map(w => w[0]).join('').toLowerCase();
-            return `${snake}, ${camel}, ${abbrev}`;
-        }
-
-        function generateSynonyms(fieldName) {
-            const synonymMap = {
-                'id': 'Identifier, Key, Reference',
-                'name': 'Title, Label, Designation',
-                'amount': 'Value, Sum, Total',
-                'date': 'Timestamp, Time, DateTime',
-                'status': 'State, Condition, Flag'
-            };
-
-            const lowerField = fieldName.toLowerCase();
-            for (let key in synonymMap) {
-                if (lowerField.includes(key)) {
-                    return synonymMap[key];
-                }
-            }
-
-            return 'N/A';
-        }
-
-        function isMetric(fieldName) {
-            const metricKeywords = ['ratio', 'rate', 'percentage', 'total', 'count', 'average', 'sum', 'score'];
-            const lowerField = fieldName.toLowerCase();
-            return metricKeywords.some(keyword => lowerField.includes(keyword));
-        }
-
-        function generateFormula(fieldName) {
-            const lowerField = fieldName.toLowerCase();
-
-            // Generate formulas with actual elements from the field name
-            if (lowerField.includes('loss') && lowerField.includes('ratio')) {
-                return 'SUM(ClaimAmount) / SUM(EarnedPremium)';
-            }
-            if (lowerField.includes('persistency') && lowerField.includes('ratio')) {
-                return 'COUNT(ActivePolicies_EndPeriod) / COUNT(ActivePolicies_StartPeriod)';
-            }
-            if (lowerField.includes('combined') && lowerField.includes('ratio')) {
-                return 'LossRatio + ExpenseRatio';
-            }
-            if (lowerField.includes('ratio')) {
-                const entity = fieldName.replace(/ratio|rate/gi, '').trim();
-                return `${entity ? entity + 'Numerator' : 'Numerator'} / ${entity ? entity + 'Denominator' : 'Denominator'}`;
-            }
-            if (lowerField.includes('uptime') || lowerField.includes('availability')) {
-                return '(TotalMinutes - UnplannedDowntimeMinutes) / TotalMinutes * 100';
-            }
-            if (lowerField.includes('response') && lowerField.includes('time')) {
-                return 'ResponseTimestamp - RequestTimestamp';
-            }
-            if (lowerField.includes('session') && lowerField.includes('duration')) {
-                return 'DATEDIFF(minute, SessionStart, SessionEnd)';
-            }
-            if (lowerField.includes('surrender') && lowerField.includes('value')) {
-                return 'SUM(PremiumPaid) - SurrenderCharges - PolicyFees - OutstandingLoans';
-            }
-            if (lowerField.includes('count') || lowerField.includes('total') || lowerField.includes('number')) {
-                const entity = fieldName.replace(/count|total|number|of/gi, '').trim();
-                const entityName = entity ? entity.replace(/\s+/g, '') + 'ID' : 'RecordID';
-                return `COUNT(${entityName})`;
-            }
-            if (lowerField.includes('average') || lowerField.includes('mean')) {
-                const entity = fieldName.replace(/average|mean/gi, '').trim();
-                const entityName = entity ? entity.replace(/\s+/g, '') : 'Value';
-                return `SUM(${entityName}) / COUNT(${entityName})`;
-            }
-            if (lowerField.includes('sum') || lowerField.includes('total')) {
-                const entity = fieldName.replace(/sum|total|of/gi, '').trim();
-                const entityName = entity ? entity.replace(/\s+/g, '') : 'Amount';
-                return `SUM(${entityName})`;
-            }
-            if (lowerField.includes('percentage') || lowerField.includes('percent')) {
-                return '(Part / Whole) * 100';
-            }
-            return '';
-        }
-
-        function extractTermsFromJSON(data, context) {
-            const terms = [];
-
-            function processObject(obj, prefix = '') {
-                for (let key in obj) {
-                    const value = obj[key];
-                    const fullKey = prefix ? `${prefix}.${key}` : key;
-
-                    if (typeof value === 'object' && !Array.isArray(value) && value !== null) {
-                        if (value.description || value.type) {
-                            // This looks like a schema definition
-                            terms.push({
-                                title: formatFieldName(key),
-                                description: value.description || generateDescription(key, context),
-                                examples: value.example || value.examples || 'N/A',
-                                business_logic: generateBusinessLogic(key, context),
-                                data_type: value.type || inferDataType(key, []),
-                                technical_aliases: generateAliases(key),
-                                synonyms: generateSynonyms(key),
-                                logical_formula: value.formula || value.calculation || ''
-                            });
-                        } else {
-                            processObject(value, fullKey);
-                        }
-                    }
-                }
-            }
-
-            processObject(data);
-            return terms;
-        }
-
-        function extractTermsFromText(content, context) {
-            const terms = [];
-            const lines = content.split('\n').filter(line => line.trim());
-
-            // Look for patterns like "Term: description" or "Term - description"
-            const termPattern = /^([A-Z][A-Za-z\s]+)[:|-]\s*(.+)$/;
-
-            for (let line of lines) {
-                const match = line.match(termPattern);
-                if (match) {
-                    const title = match[1].trim();
-                    const description = match[2].trim();
-
-                    terms.push({
-                        title: title,
-                        description: description,
-                        examples: 'See documentation',
-                        business_logic: generateBusinessLogic(title, context),
-                        data_type: inferDataType(title, []),
-                        technical_aliases: generateAliases(title),
-                        synonyms: generateSynonyms(title),
-                        logical_formula: isMetric(title) ? generateFormula(title) : ''
-                    });
-                }
-            }
-
-            return terms;
-        }
-
-        // Handle form submission
-        uploadForm.addEventListener('submit', async function(e) {
+        // Form submission
+        uploadForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
             const file = fileInput.files[0];
@@ -1172,160 +566,506 @@
                 return;
             }
 
-            // Reset UI
-            errorMessage.style.display = 'none';
-            successMessage.style.display = 'none';
-            resultsSection.style.display = 'none';
-
-            // Show loading state
-            submitBtn.disabled = true;
-            btnText.textContent = 'Processing...';
-            spinner.style.display = 'inline-block';
+            showLoading(submitBtn, true);
+            hideError();
 
             try {
-                const fileType = file.name.split('.').pop().toLowerCase();
-                const fileContent = await readFileContent(file);
-                const context = businessContext.value;
+                const columns = await parseFile(file);
+
+                if (!columns || columns.length === 0) {
+                    showError('No column names found in file');
+                    showLoading(submitBtn, false);
+                    return;
+                }
+
+                // Remove duplicates
+                const uniqueColumns = [...new Set(columns)];
 
                 // Generate glossary
-                currentGlossaryData = generateGlossaryFromContent(fileContent, fileType, context);
+                currentGlossary = generateGlossary(uniqueColumns);
 
-                // Display results
-                displayGlossary(currentGlossaryData);
-                resultsSection.style.display = 'block';
-                showSuccess(`Successfully generated ${currentGlossaryData.length} glossary entries!`);
-
-                // Scroll to results
-                resultsSection.scrollIntoView({ behavior: 'smooth' });
+                // Show results
+                showResults();
             } catch (error) {
                 showError('Error processing file: ' + error.message);
-                console.error('Error:', error);
             } finally {
-                // Reset button state
-                submitBtn.disabled = false;
-                btnText.textContent = 'Generate Glossary';
-                spinner.style.display = 'none';
+                showLoading(submitBtn, false);
             }
         });
 
-        // Read file content
-        function readFileContent(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (e) => resolve(e.target.result);
-                reader.onerror = (e) => reject(new Error('Failed to read file'));
-                reader.readAsText(file);
-            });
+        // Export to CSV
+        exportCsvBtn.addEventListener('click', () => {
+            const csvContent = generateCSV(currentGlossary);
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', `Insurance_Business_Glossary_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        // New glossary
+        newGlossaryBtn.addEventListener('click', resetApp);
+
+        // Parse uploaded file
+        async function parseFile(file) {
+            const text = await file.text();
+            const fileName = file.name.toLowerCase();
+
+            if (fileName.endsWith('.csv')) {
+                return parseCSV(text);
+            } else if (fileName.endsWith('.json')) {
+                return parseJSON(text);
+            } else if (fileName.endsWith('.txt')) {
+                return parseTXT(text);
+            } else {
+                throw new Error('Unsupported file format');
+            }
         }
 
-        // Display glossary in table
-        function displayGlossary(glossary) {
-            glossaryBody.innerHTML = '';
+        function parseCSV(text) {
+            const lines = text.split('\n');
+            if (lines.length === 0) return [];
+
+            // First line is headers
+            const headers = lines[0].split(',').map(h => h.trim().replace(/['"]/g, ''));
+            return headers.filter(h => h.length > 0);
+        }
+
+        function parseJSON(text) {
+            try {
+                const data = JSON.parse(text);
+                if (Array.isArray(data) && data.length > 0) {
+                    return Object.keys(data[0]);
+                } else if (typeof data === 'object') {
+                    return Object.keys(data);
+                }
+                return [];
+            } catch (e) {
+                throw new Error('Invalid JSON format');
+            }
+        }
+
+        function parseTXT(text) {
+            return text.split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0);
+        }
+
+        // Generate glossary from column names
+        function generateGlossary(columns) {
+            // Group similar columns
+            const groupedColumns = groupSimilarColumns(columns);
+
+            // Generate glossary entries
+            const glossary = [];
+
+            for (const [term, cols] of Object.entries(groupedColumns)) {
+                const entry = generateGlossaryEntry(term, cols);
+                glossary.push(entry);
+            }
+
+            return glossary.sort((a, b) => a.business_term.localeCompare(b.business_term));
+        }
+
+        function groupSimilarColumns(columns) {
+            const groups = {};
+
+            for (const col of columns) {
+                // Normalize column name for grouping
+                const baseName = col.toLowerCase()
+                    .replace(/_id$/i, '')
+                    .replace(/_amt$/i, '')
+                    .replace(/_num$/i, '')
+                    .replace(/_dt$/i, '')
+                    .replace(/_date$/i, '')
+                    .replace(/_/g, ' ')
+                    .replace(/-/g, ' ')
+                    .trim();
+
+                const key = baseName || col;
+
+                if (!groups[key]) {
+                    groups[key] = [];
+                }
+                groups[key].push(col);
+            }
+
+            return groups;
+        }
+
+        function generateGlossaryEntry(baseName, columns) {
+            // Format business term
+            const businessTerm = formatBusinessTerm(baseName);
+
+            // Determine term type
+            const termType = determineTermType(businessTerm, columns);
+
+            // Determine data domain
+            const dataDomain = determineDomain(businessTerm, columns);
+
+            // Generate three-layer definition
+            const definition = generateThreeLayerDefinition(businessTerm, termType, dataDomain, columns);
+
+            return {
+                business_term: businessTerm,
+                business_definition: definition.layer1,
+                business_context: definition.layer2,
+                technical_bridge: definition.layer3,
+                synonyms: generateSynonyms(businessTerm, columns),
+                allowed_values: generateAllowedValues(businessTerm, columns),
+                data_domain: dataDomain,
+                associated_columns: columns.join('|')
+            };
+        }
+
+        function formatBusinessTerm(name) {
+            return name
+                .split(/[\s_-]+/)
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                .join(' ');
+        }
+
+        function determineTermType(term, columns) {
+            const lowerTerm = term.toLowerCase();
+            const metricKeywords = ['ratio', 'rate', 'percentage', 'count', 'total', 'number', 'sum', 'average'];
+
+            if (metricKeywords.some(keyword => lowerTerm.includes(keyword))) {
+                return 'Business metric';
+            }
+
+            return 'Business term';
+        }
+
+        function determineDomain(term, columns) {
+            const lowerTerm = term.toLowerCase();
+            const colStr = columns.join(' ').toLowerCase();
+
+            // Domain classification logic
+            if (lowerTerm.includes('claim') || colStr.includes('claim')) return 'Claims';
+            if (lowerTerm.includes('policy') || lowerTerm.includes('coverage') || colStr.includes('policy')) return 'Policy';
+            if (lowerTerm.includes('customer') || lowerTerm.includes('insured') || lowerTerm.includes('policyholder')) return 'Customer';
+            if (lowerTerm.includes('premium') || lowerTerm.includes('payment') || lowerTerm.includes('amount')) return 'Finance';
+            if (lowerTerm.includes('broker')) return 'Broker';
+            if (lowerTerm.includes('agent')) return 'Agent';
+            if (lowerTerm.includes('risk') || lowerTerm.includes('underwriting')) return 'Risk';
+            if (lowerTerm.includes('employee') || lowerTerm.includes('staff')) return 'HR';
+
+            return 'Policy'; // Default
+        }
+
+        function generateThreeLayerDefinition(term, termType, domain, columns) {
+            const lowerTerm = term.toLowerCase();
+
+            // Layer 1: Business Definition (1-2 sentences, plain language)
+            let layer1 = '';
+
+            if (lowerTerm.includes('number') || lowerTerm.includes('id')) {
+                layer1 = `The unique identifier assigned to each ${domain.toLowerCase()} for tracking and reference throughout its lifecycle.`;
+            } else if (lowerTerm.includes('date')) {
+                const eventType = extractEventType(term);
+                layer1 = `The date when ${eventType} occurs, marking a key milestone in the ${domain.toLowerCase()} lifecycle.`;
+            } else if (lowerTerm.includes('amount') || lowerTerm.includes('premium') || lowerTerm.includes('payment')) {
+                layer1 = `The monetary value of ${term.toLowerCase()} representing the total amount charged or paid in the insurance transaction.`;
+            } else if (lowerTerm.includes('status') || lowerTerm.includes('state')) {
+                layer1 = `The current state of the ${domain.toLowerCase()} indicating whether it is active, suspended, or terminated.`;
+            } else if (lowerTerm.includes('ratio') || lowerTerm.includes('rate')) {
+                layer1 = `A key performance metric calculated as a percentage to measure ${domain.toLowerCase()} efficiency and profitability.`;
+            } else if (lowerTerm.includes('name') || lowerTerm.includes('description')) {
+                layer1 = `The descriptive identifier or label for the ${domain.toLowerCase()} providing human-readable information.`;
+            } else {
+                layer1 = `A ${termType.toLowerCase()} in the ${domain} domain that captures essential information about insurance operations.`;
+            }
+
+            // Layer 2: Business Context (2-3 sentences)
+            let layer2 = '';
+
+            if (termType === 'Business metric') {
+                layer2 = `This metric is monitored by business stakeholders to evaluate performance and make strategic decisions. `;
+                layer2 += `It provides insights into ${domain.toLowerCase()} operations and helps identify trends requiring attention. `;
+                layer2 += `Values are tracked over time and compared against targets to ensure business objectives are met.`;
+            } else if (lowerTerm.includes('status') || lowerTerm.includes('state')) {
+                layer2 = `The status changes throughout the lifecycle based on business events and user actions. `;
+                layer2 += `Only certain status values allow for specific operations and transitions. `;
+                layer2 += `Status tracking is essential for workflow management and compliance reporting.`;
+            } else if (lowerTerm.includes('date')) {
+                layer2 = `This date is used to determine eligibility, calculate durations, and trigger time-based processes. `;
+                layer2 += `It serves as a key reference point for reporting and analytics. `;
+                layer2 += `The date is stored in the system and used across multiple business operations.`;
+            } else if (lowerTerm.includes('amount') || lowerTerm.includes('premium')) {
+                layer2 = `The amount is calculated based on risk assessment, coverage parameters, and policy terms. `;
+                layer2 += `It impacts financial reporting, reserves, and profitability analysis. `;
+                layer2 += `The value is subject to validation rules and may be adjusted based on business logic.`;
+            } else if (lowerTerm.includes('number') || lowerTerm.includes('id')) {
+                layer2 = `This identifier is used across all systems for linking related records and transactions. `;
+                layer2 += `It remains constant throughout the lifecycle and serves as the primary key for data retrieval. `;
+                layer2 += `The unique identifier ensures data integrity and enables accurate reporting.`;
+            } else {
+                layer2 = `This information is used by insurance professionals to process transactions and make informed decisions. `;
+                layer2 += `It integrates with other data elements to provide a complete view of the ${domain.toLowerCase()}. `;
+                layer2 += `The data is maintained according to business rules and regulatory requirements.`;
+            }
+
+            // Layer 3: Technical Bridge (optional, 1-2 sentences)
+            let layer3 = null;
+
+            // Only include technical bridge for key operational fields
+            if (lowerTerm.includes('number') || lowerTerm.includes('id') ||
+                lowerTerm.includes('amount') || lowerTerm.includes('status')) {
+                const tableName = domain.toUpperCase();
+                const primaryCol = columns[0];
+                layer3 = `Stored in ${tableName}.${primaryCol.toUpperCase()}. `;
+
+                if (lowerTerm.includes('number') || lowerTerm.includes('id')) {
+                    layer3 += `Referenced by multiple tables as a foreign key for establishing relationships.`;
+                } else if (lowerTerm.includes('status')) {
+                    layer3 += `Status changes are logged in ${tableName}_HISTORY with timestamps and reason codes.`;
+                } else {
+                    layer3 += `Used in calculations and aggregations for reporting and analytics.`;
+                }
+            }
+
+            return {
+                layer1,
+                layer2,
+                layer3
+            };
+        }
+
+        function extractEventType(term) {
+            const lowerTerm = term.toLowerCase();
+            if (lowerTerm.includes('effective')) return 'the insurance coverage becomes active';
+            if (lowerTerm.includes('expir') || lowerTerm.includes('end')) return 'the insurance coverage terminates';
+            if (lowerTerm.includes('issue') || lowerTerm.includes('create')) return 'the policy is created in the system';
+            if (lowerTerm.includes('claim')) return 'the claim is filed or processed';
+            if (lowerTerm.includes('payment')) return 'the payment transaction occurs';
+            return 'the event is recorded in the system';
+        }
+
+        function generateSynonyms(term, columns) {
+            const synonyms = [];
+            const lowerTerm = term.toLowerCase();
+
+            // Common insurance synonyms
+            if (lowerTerm.includes('policy number')) synonyms.push('Policy ID', 'Contract Number');
+            if (lowerTerm.includes('claim amount')) synonyms.push('Settlement Amount', 'Payout');
+            if (lowerTerm.includes('premium')) synonyms.push('Insurance Premium', 'Policy Premium');
+            if (lowerTerm.includes('customer')) synonyms.push('Policyholder', 'Insured');
+            if (lowerTerm.includes('deductible')) synonyms.push('Out-of-pocket Amount', 'Excess');
+
+            return synonyms;
+        }
+
+        function generateAllowedValues(term, columns) {
+            const lowerTerm = term.toLowerCase();
+
+            // Return allowed values for status/state fields
+            if (lowerTerm.includes('status') || lowerTerm.includes('state')) {
+                if (lowerTerm.includes('policy')) {
+                    return ['active', 'pending', 'lapsed', 'cancelled', 'expired'];
+                } else if (lowerTerm.includes('claim')) {
+                    return ['open', 'pending', 'approved', 'denied', 'closed'];
+                } else if (lowerTerm.includes('payment')) {
+                    return ['pending', 'processed', 'failed', 'reversed'];
+                } else {
+                    return ['active', 'inactive', 'suspended'];
+                }
+            }
+
+            return null;
+        }
+
+        function showResults() {
+            uploadSection.style.display = 'none';
+            resultsSection.style.display = 'block';
+
+            termCountEl.textContent = currentGlossary.length;
+
+            renderGlossaryCards(currentGlossary);
+
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function renderGlossaryCards(glossary) {
+            glossaryResults.innerHTML = '';
 
             glossary.forEach(item => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td><strong>${escapeHtml(item.title)}</strong></td>
-                    <td>${escapeHtml(item.term_type || 'Business term')}</td>
-                    <td>${escapeHtml(item.data_domain || 'General')}</td>
-                    <td>${escapeHtml(item.description)}</td>
-                    <td>${escapeHtml(item.examples)}</td>
-                    <td>${escapeHtml(item.business_logic)}</td>
-                    <td>${escapeHtml(item.data_type)}</td>
-                    <td>${escapeHtml(item.technical_aliases)}</td>
-                    <td>${escapeHtml(item.synonyms)}</td>
-                    <td>${escapeHtml(item.logical_formula || '-')}</td>
+                const card = document.createElement('div');
+                card.className = 'glossary-card';
+
+                // Header with term and domain badge
+                const header = document.createElement('div');
+                header.className = 'card-header';
+                header.innerHTML = `
+                    <h3>${escapeHtml(item.business_term)}</h3>
+                    <span class="domain-badge">${escapeHtml(item.data_domain)}</span>
                 `;
-                glossaryBody.appendChild(row);
+                card.appendChild(header);
+
+                // Layer 1: Business Definition
+                const layer1 = document.createElement('div');
+                layer1.className = 'layer-section layer-1';
+                layer1.innerHTML = `
+                    <div class="layer-label">Layer 1: Business Definition</div>
+                    <p class="layer-content">${escapeHtml(item.business_definition)}</p>
+                `;
+                card.appendChild(layer1);
+
+                // Layer 2: Business Context
+                const layer2 = document.createElement('div');
+                layer2.className = 'layer-section layer-2';
+                layer2.innerHTML = `
+                    <div class="layer-label">Layer 2: Business Context</div>
+                    <p class="layer-content">${escapeHtml(item.business_context)}</p>
+                `;
+                card.appendChild(layer2);
+
+                // Layer 3: Technical Bridge (optional, collapsible)
+                if (item.technical_bridge) {
+                    const layer3 = document.createElement('div');
+                    layer3.className = 'layer-section layer-3';
+                    layer3.innerHTML = `
+                        <div class="layer-label collapsible">
+                            <span>Layer 3: Technical Bridge</span>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                        <div class="layer-content collapsible-content">
+                            ${escapeHtml(item.technical_bridge)}
+                        </div>
+                    `;
+
+                    // Make it collapsible
+                    const labelEl = layer3.querySelector('.layer-label');
+                    const contentEl = layer3.querySelector('.layer-content');
+                    labelEl.addEventListener('click', () => {
+                        contentEl.classList.toggle('expanded');
+                        labelEl.querySelector('.toggle-icon').textContent =
+                            contentEl.classList.contains('expanded') ? '▲' : '▼';
+                    });
+
+                    card.appendChild(layer3);
+                }
+
+                // Additional info section
+                const additionalInfo = document.createElement('div');
+                additionalInfo.className = 'additional-info';
+
+                let infoHTML = '';
+
+                // Synonyms
+                if (item.synonyms && item.synonyms.length > 0) {
+                    infoHTML += `
+                        <div class="info-item">
+                            <strong>Synonyms:</strong> ${item.synonyms.map(s => `<span class="tag">${escapeHtml(s)}</span>`).join(' ')}
+                        </div>
+                    `;
+                }
+
+                // Allowed Values
+                if (item.allowed_values && item.allowed_values.length > 0) {
+                    infoHTML += `
+                        <div class="info-item">
+                            <strong>Allowed Values:</strong> ${item.allowed_values.map(v => `<code>${escapeHtml(v)}</code>`).join(', ')}
+                        </div>
+                    `;
+                }
+
+                // Associated Columns
+                if (item.associated_columns) {
+                    const columns = item.associated_columns.split('|');
+                    infoHTML += `
+                        <div class="info-item">
+                            <strong>Associated Database Columns:</strong> ${columns.map(c => `<code>${escapeHtml(c)}</code>`).join(', ')}
+                        </div>
+                    `;
+                }
+
+                if (infoHTML) {
+                    additionalInfo.innerHTML = infoHTML;
+                    card.appendChild(additionalInfo);
+                }
+
+                glossaryResults.appendChild(card);
             });
         }
 
-        // Show error message
+        function generateCSV(glossary) {
+            const headers = [
+                'Business Term',
+                'Business Definition',
+                'Business Context',
+                'Technical Bridge',
+                'Synonyms',
+                'Allowed Values',
+                'Data Domain',
+                'Associated Database Columns'
+            ];
+
+            const rows = glossary.map(item => [
+                item.business_term || '',
+                item.business_definition || '',
+                item.business_context || '',
+                item.technical_bridge || '',
+                (item.synonyms || []).join('; '),
+                (item.allowed_values || []).join('; '),
+                item.data_domain || '',
+                item.associated_columns || ''
+            ]);
+
+            const csvRows = [headers, ...rows].map(row =>
+                row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
+            );
+
+            return csvRows.join('\n');
+        }
+
+        function showLoading(button, isLoading) {
+            const btnText = button.querySelector('.btn-text');
+            const spinner = button.querySelector('.spinner');
+
+            if (isLoading) {
+                button.disabled = true;
+                btnText.style.display = 'none';
+                spinner.style.display = 'inline-block';
+            } else {
+                button.disabled = false;
+                btnText.style.display = 'inline';
+                spinner.style.display = 'none';
+            }
+        }
+
         function showError(message) {
             errorMessage.textContent = message;
             errorMessage.style.display = 'block';
-            errorMessage.scrollIntoView({ behavior: 'smooth' });
+            errorMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
 
-        // Show success message
-        function showSuccess(message) {
-            successMessage.textContent = message;
-            successMessage.style.display = 'block';
+        function hideError() {
+            errorMessage.style.display = 'none';
         }
 
-        // Escape HTML to prevent XSS
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
+        function resetApp() {
+            currentGlossary = [];
+            uploadForm.reset();
+            document.querySelector('.file-text').textContent = 'Choose a file or drag it here';
+            uploadSection.style.display = 'block';
+            resultsSection.style.display = 'none';
+            hideError();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // Export to CSV
-        exportBtn.addEventListener('click', function() {
-            if (currentGlossaryData.length === 0) {
-                return;
-            }
-
-            const headers = ['Title', 'Term Type', 'Data Domain', 'Description', 'Examples', 'Business Logic', 'Data Type', 'Technical Aliases', 'Synonyms', 'Logical Formula'];
-
-            let csv = headers.join(',') + '\n';
-
-            currentGlossaryData.forEach(item => {
-                const row = [
-                    item.title,
-                    item.term_type || 'Business term',
-                    item.data_domain || 'General',
-                    item.description,
-                    item.examples,
-                    item.business_logic,
-                    item.data_type,
-                    item.technical_aliases,
-                    item.synonyms,
-                    item.logical_formula || ''
-                ].map(field => {
-                    const escaped = String(field).replace(/"/g, '""');
-                    return `"${escaped}"`;
-                });
-
-                csv += row.join(',') + '\n';
-            });
-
-            // Create download link
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'business_glossary.csv';
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-        });
-
-        // Drag and drop support
-        const fileInputWrapper = document.querySelector('.file-input-wrapper');
-        const fileInputLabel = document.querySelector('.file-input-label');
-
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            fileInputWrapper.addEventListener(eventName, preventDefaults, false);
-        });
-
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
+        function escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            return String(unsafe)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
         }
-
-        ['dragenter', 'dragover'].forEach(eventName => {
-            fileInputWrapper.addEventListener(eventName, () => {
-                fileInputLabel.classList.add('highlight');
-            }, false);
-        });
-
-        ['dragleave', 'drop'].forEach(eventName => {
-            fileInputWrapper.addEventListener(eventName, () => {
-                fileInputLabel.classList.remove('highlight');
-            }, false);
-        });
     </script>
 </body>
 </html>
