@@ -2,6 +2,34 @@
 
 A web application that automatically generates comprehensive business glossaries from uploaded data files. The app uses AI to parse documents and extract business terms, metrics, and their detailed attributes.
 
+## Two Versions Available
+
+This project provides **two versions** of the Business Glossary Generator:
+
+### 1. Standalone HTML Version (No Installation Required)
+📄 **File**: `business-glossary-generator.html`
+
+- **Zero installation** - just open in any web browser
+- Works **completely offline** - no server needed
+- **100% private** - all processing happens locally
+- Supports CSV, JSON, and TXT files
+- Perfect for quick analysis or sharing the tool
+
+👉 [See HTML Version Documentation](HTML_VERSION_README.md)
+
+### 2. Flask Web Application (Full-Featured)
+🚀 **Files**: `app.py`, `templates/`, `static/`
+
+- Full Python Flask backend
+- Supports **Excel files** (.xlsx, .xls)
+- **AI-powered** analysis with Claude API
+- More advanced features and customization
+- Can be deployed as a web service
+
+👉 Continue reading below for Flask version setup
+
+---
+
 ## Features
 
 - **File Upload Support**: Accepts multiple file formats (CSV, Excel, TXT, JSON)
@@ -94,15 +122,22 @@ coverage_limit,Maximum claim amount,500000.00
 
 ```
 Claudecodeapps/
-├── app.py                 # Flask application and API endpoints
+├── business-glossary-generator.html    # Standalone HTML version (no server needed)
+├── app.py                              # Flask application and API endpoints
 ├── templates/
-│   └── index.html        # Main web interface
+│   └── index.html                      # Flask web interface
 ├── static/
-│   ├── style.css         # Styling
-│   └── script.js         # Frontend logic
-├── uploads/              # Temporary file storage (auto-created)
-├── requirements.txt      # Python dependencies
-└── README.md            # Documentation
+│   ├── style.css                       # Styling
+│   └── script.js                       # Frontend logic
+├── sample_data/                        # Example files for testing
+│   ├── insurance_data.csv
+│   ├── it_systems.json
+│   └── life_insurance_terms.txt
+├── uploads/                            # Temporary file storage (auto-created)
+├── requirements.txt                    # Python dependencies
+├── README.md                           # Main documentation
+├── HTML_VERSION_README.md              # Standalone HTML version docs
+└── QUICKSTART.md                       # Quick start guide
 ```
 
 ## Configuration

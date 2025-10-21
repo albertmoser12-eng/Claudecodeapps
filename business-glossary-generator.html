@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Glossary Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --secondary-color: #64748b;
+            --success-color: #10b981;
+            --error-color: #ef4444;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --border: #e2e8f0;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--background);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            color: white;
+            box-shadow: var(--shadow-lg);
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.95;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+
+        .upload-section {
+            background: var(--surface);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            background: var(--surface);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .file-input-wrapper {
+            position: relative;
+        }
+
+        input[type="file"] {
+            opacity: 0;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .file-input-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            background: var(--background);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .file-input-label:hover,
+        .file-input-label.highlight {
+            border-color: var(--primary-color);
+            background: #f0f9ff;
+        }
+
+        .file-icon {
+            font-size: 2rem;
+            margin-right: 12px;
+        }
+
+        .file-text {
+            font-size: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .file-info {
+            margin-top: 8px;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .btn-primary, .btn-secondary {
+            padding: 14px 32px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #475569;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #fee2e2;
+            border: 1px solid var(--error-color);
+            color: #991b1b;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .success-message {
+            background: #d1fae5;
+            border: 1px solid var(--success-color);
+            color: #065f46;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .results-section {
+            background: var(--surface);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .results-header h2 {
+            font-size: 1.75rem;
+            color: var(--text-primary);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--surface);
+        }
+
+        thead {
+            background: #f1f5f9;
+        }
+
+        th {
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--border);
+            white-space: nowrap;
+            font-size: 0.9rem;
+        }
+
+        td {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        tbody tr:hover {
+            background: var(--background);
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .info-box {
+            background: #dbeafe;
+            border-left: 4px solid var(--primary-color);
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .info-box p {
+            margin: 0;
+            color: #1e40af;
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.75rem;
+            }
+
+            .upload-section {
+                padding: 20px;
+            }
+
+            .results-section {
+                padding: 20px;
+            }
+
+            .results-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .btn-secondary {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Business Glossary Generator</h1>
+            <p class="subtitle">Upload your data file to automatically generate a comprehensive business glossary</p>
+            <span class="badge">Standalone HTML Version</span>
+        </header>
+
+        <div class="info-box">
+            <p><strong>Note:</strong> This is a standalone HTML version that runs entirely in your browser. No server required! File processing happens locally.</p>
+        </div>
+
+        <div class="upload-section">
+            <form id="uploadForm">
+                <div class="form-group">
+                    <label for="business_context">Business Context</label>
+                    <select id="business_context" name="business_context" required>
+                        <option value="General Insurance">General Insurance</option>
+                        <option value="Life Insurance">Life Insurance</option>
+                        <option value="Information Technology">Information Technology</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="file">Upload File</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="file" name="file" accept=".txt,.csv,.json" required>
+                        <div class="file-input-label">
+                            <span class="file-icon">📁</span>
+                            <span class="file-text">Choose a file or drag it here</span>
+                        </div>
+                    </div>
+                    <p class="file-info">Supported formats: TXT, CSV, JSON (Excel requires backend)</p>
+                </div>
+
+                <button type="submit" class="btn-primary" id="submitBtn">
+                    <span class="btn-text">Generate Glossary</span>
+                    <span class="spinner" style="display: none;"></span>
+                </button>
+            </form>
+        </div>
+
+        <div id="errorMessage" class="error-message" style="display: none;"></div>
+        <div id="successMessage" class="success-message" style="display: none;"></div>
+
+        <div id="resultsSection" class="results-section" style="display: none;">
+            <div class="results-header">
+                <h2>Business Glossary Results</h2>
+                <button id="exportBtn" class="btn-secondary">Export to CSV</button>
+            </div>
+            <div class="table-wrapper">
+                <table id="glossaryTable">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Description</th>
+                            <th>Examples</th>
+                            <th>Business Logic</th>
+                            <th>Data Type</th>
+                            <th>Technical Aliases</th>
+                            <th>Synonyms</th>
+                            <th>Logical Formula</th>
+                        </tr>
+                    </thead>
+                    <tbody id="glossaryBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Glossary data templates
+        const glossaryTemplates = {
+            "General Insurance": [
+                {
+                    "title": "Premium",
+                    "description": "The amount paid by the policyholder to the insurance company for coverage",
+                    "examples": "Monthly premium: $150, Annual premium: $1,800",
+                    "business_logic": "Calculated based on risk factors, coverage amount, and policy term",
+                    "data_type": "Currency/Decimal",
+                    "technical_aliases": "premium_amount, policy_premium, prem_amt",
+                    "synonyms": "Insurance Premium, Policy Payment",
+                    "logical_formula": ""
+                },
+                {
+                    "title": "Claim Amount",
+                    "description": "The monetary value requested or paid for an insurance claim",
+                    "examples": "Claim for vehicle damage: $5,000, Medical claim: $2,500",
+                    "business_logic": "Must not exceed policy coverage limits; subject to deductibles",
+                    "data_type": "Currency/Decimal",
+                    "technical_aliases": "claim_amt, paid_amount, settlement_amount",
+                    "synonyms": "Settlement Amount, Claim Payment, Payout",
+                    "logical_formula": ""
+                },
+                {
+                    "title": "Loss Ratio",
+                    "description": "The ratio of claims paid to premiums earned",
+                    "examples": "Loss Ratio of 0.75 means 75% of premiums are paid out as claims",
+                    "business_logic": "Used to measure profitability and pricing adequacy of insurance products",
+                    "data_type": "Decimal/Percentage",
+                    "technical_aliases": "loss_ratio, claims_ratio",
+                    "synonyms": "Claims Ratio, Incurred Loss Ratio",
+                    "logical_formula": "(Total Claims Paid / Total Premiums Earned) * 100"
+                },
+                {
+                    "title": "Deductible",
+                    "description": "The amount the policyholder must pay before insurance coverage begins",
+                    "examples": "$500 deductible, $1,000 deductible",
+                    "business_logic": "Higher deductibles typically result in lower premiums",
+                    "data_type": "Currency/Decimal",
+                    "technical_aliases": "deductible_amount, ded_amt",
+                    "synonyms": "Out-of-Pocket Amount, Excess",
+                    "logical_formula": ""
+                }
+            ],
+            "Life Insurance": [
+                {
+                    "title": "Sum Assured",
+                    "description": "The guaranteed amount payable to beneficiaries upon death or maturity",
+                    "examples": "Life cover: $500,000, Term insurance sum assured: $1,000,000",
+                    "business_logic": "Determined at policy inception based on income, needs, and underwriting",
+                    "data_type": "Currency/Decimal",
+                    "technical_aliases": "coverage_amount, death_benefit, face_amount",
+                    "synonyms": "Death Benefit, Coverage Amount, Face Value",
+                    "logical_formula": ""
+                },
+                {
+                    "title": "Surrender Value",
+                    "description": "The amount payable to the policyholder if the policy is terminated before maturity",
+                    "examples": "After 5 years, surrender value: $12,000",
+                    "business_logic": "Calculated based on premiums paid, policy duration, and surrender charges",
+                    "data_type": "Currency/Decimal",
+                    "technical_aliases": "cash_surrender_value, csv, surrender_amt",
+                    "synonyms": "Cash Value, Termination Value",
+                    "logical_formula": "Total Premiums Paid - Surrender Charges - Policy Fees"
+                },
+                {
+                    "title": "Mortality Rate",
+                    "description": "The probability of death within a specified age group",
+                    "examples": "Mortality rate for age 40-45: 0.002 (0.2%)",
+                    "business_logic": "Used for premium calculation and reserves estimation",
+                    "data_type": "Decimal/Percentage",
+                    "technical_aliases": "death_rate, mortality_prob",
+                    "synonyms": "Death Rate, Mortality Probability",
+                    "logical_formula": "Number of Deaths / Total Population in Age Group"
+                },
+                {
+                    "title": "Policy Term",
+                    "description": "The duration for which the insurance coverage is valid",
+                    "examples": "20-year term, 30-year term, Whole life (lifetime)",
+                    "business_logic": "Defines the period of coverage and premium payment duration",
+                    "data_type": "Integer/Years",
+                    "technical_aliases": "coverage_period, term_years",
+                    "synonyms": "Coverage Period, Policy Duration",
+                    "logical_formula": ""
+                }
+            ],
+            "Information Technology": [
+                {
+                    "title": "User ID",
+                    "description": "Unique identifier assigned to each system user",
+                    "examples": "U123456, user@example.com, EMP001",
+                    "business_logic": "Must be unique across the system; used for authentication and audit trails",
+                    "data_type": "String/VARCHAR",
+                    "technical_aliases": "user_id, uid, username, login_id",
+                    "synonyms": "Username, Login ID, Account ID",
+                    "logical_formula": ""
+                },
+                {
+                    "title": "Session Duration",
+                    "description": "The length of time a user remains actively logged into the system",
+                    "examples": "Average session: 45 minutes, Timeout: 30 minutes",
+                    "business_logic": "Tracked for security and usage analytics; sessions expire after inactivity",
+                    "data_type": "Integer/Time",
+                    "technical_aliases": "session_time, login_duration, active_time",
+                    "synonyms": "Login Duration, Active Time, Session Length",
+                    "logical_formula": ""
+                },
+                {
+                    "title": "System Uptime",
+                    "description": "Percentage of time the system is operational and accessible",
+                    "examples": "99.9% uptime, 99.99% availability",
+                    "business_logic": "Calculated excluding planned maintenance; key SLA metric",
+                    "data_type": "Percentage/Decimal",
+                    "technical_aliases": "availability, uptime_pct, system_availability",
+                    "synonyms": "Availability, Service Uptime, System Availability",
+                    "logical_formula": "(Total Time - Downtime) / Total Time * 100"
+                },
+                {
+                    "title": "Response Time",
+                    "description": "Time taken for the system to respond to a user request",
+                    "examples": "Average response time: 250ms, Peak: 500ms",
+                    "business_logic": "Key performance indicator; should be minimized for better user experience",
+                    "data_type": "Integer/Milliseconds",
+                    "technical_aliases": "latency, response_time_ms, rt",
+                    "synonyms": "Latency, Request Time, API Response Time",
+                    "logical_formula": "Request End Time - Request Start Time"
+                }
+            ]
+        };
+
+        let currentGlossaryData = [];
+
+        // DOM elements
+        const uploadForm = document.getElementById('uploadForm');
+        const fileInput = document.getElementById('file');
+        const fileLabel = document.querySelector('.file-text');
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = document.querySelector('.btn-text');
+        const spinner = document.querySelector('.spinner');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+        const resultsSection = document.getElementById('resultsSection');
+        const glossaryBody = document.getElementById('glossaryBody');
+        const exportBtn = document.getElementById('exportBtn');
+        const businessContext = document.getElementById('business_context');
+
+        // Update file label when file is selected
+        fileInput.addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                fileLabel.textContent = e.target.files[0].name;
+            } else {
+                fileLabel.textContent = 'Choose a file or drag it here';
+            }
+        });
+
+        // Parse CSV content
+        function parseCSV(content) {
+            const lines = content.split('\n').filter(line => line.trim());
+            if (lines.length === 0) return [];
+
+            const headers = lines[0].split(',').map(h => h.trim());
+            const data = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',').map(v => v.trim());
+                const row = {};
+                headers.forEach((header, index) => {
+                    row[header] = values[index] || '';
+                });
+                data.push(row);
+            }
+
+            return { headers, data };
+        }
+
+        // Parse JSON content
+        function parseJSON(content) {
+            try {
+                return JSON.parse(content);
+            } catch (e) {
+                throw new Error('Invalid JSON format');
+            }
+        }
+
+        // Generate glossary from file content
+        function generateGlossaryFromContent(content, fileType, context) {
+            let parsedData;
+            let terms = [];
+
+            try {
+                if (fileType === 'csv') {
+                    parsedData = parseCSV(content);
+                    // Extract field names and create glossary entries
+                    if (parsedData.headers && parsedData.headers.length > 0) {
+                        parsedData.headers.forEach((header, index) => {
+                            const sampleValues = parsedData.data.slice(0, 3).map(row => row[header]).filter(v => v).join(', ');
+                            terms.push({
+                                title: formatFieldName(header),
+                                description: generateDescription(header, context),
+                                examples: sampleValues || 'N/A',
+                                business_logic: generateBusinessLogic(header, context),
+                                data_type: inferDataType(header, parsedData.data),
+                                technical_aliases: generateAliases(header),
+                                synonyms: generateSynonyms(header),
+                                logical_formula: isMetric(header) ? generateFormula(header) : ''
+                            });
+                        });
+                    }
+                } else if (fileType === 'json') {
+                    parsedData = parseJSON(content);
+                    terms = extractTermsFromJSON(parsedData, context);
+                } else if (fileType === 'txt') {
+                    terms = extractTermsFromText(content, context);
+                }
+
+                // If we couldn't extract enough terms, use template
+                if (terms.length < 2) {
+                    return glossaryTemplates[context] || glossaryTemplates["Information Technology"];
+                }
+
+                return terms;
+            } catch (e) {
+                console.error('Error generating glossary:', e);
+                return glossaryTemplates[context] || glossaryTemplates["Information Technology"];
+            }
+        }
+
+        // Helper functions
+        function formatFieldName(name) {
+            return name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+
+        function generateDescription(fieldName, context) {
+            const descriptions = {
+                'id': 'Unique identifier for the record',
+                'name': 'Name or title of the entity',
+                'date': 'Date timestamp for the record',
+                'amount': 'Monetary value or quantity',
+                'status': 'Current state or condition',
+                'type': 'Category or classification'
+            };
+
+            const lowerField = fieldName.toLowerCase();
+            for (let key in descriptions) {
+                if (lowerField.includes(key)) {
+                    return descriptions[key];
+                }
+            }
+
+            return `Business term representing ${fieldName.toLowerCase()} in the ${context} domain`;
+        }
+
+        function generateBusinessLogic(fieldName, context) {
+            if (fieldName.toLowerCase().includes('id')) {
+                return 'Must be unique and immutable once assigned';
+            }
+            if (fieldName.toLowerCase().includes('amount') || fieldName.toLowerCase().includes('value')) {
+                return 'Must be non-negative; subject to business validation rules';
+            }
+            if (fieldName.toLowerCase().includes('date')) {
+                return 'Must be a valid date; used for temporal analysis';
+            }
+            return `Governed by ${context} business rules and data quality standards`;
+        }
+
+        function inferDataType(fieldName, data) {
+            const lowerField = fieldName.toLowerCase();
+            if (lowerField.includes('id')) return 'String/VARCHAR';
+            if (lowerField.includes('date')) return 'Date/Timestamp';
+            if (lowerField.includes('amount') || lowerField.includes('price') || lowerField.includes('value')) return 'Decimal/Currency';
+            if (lowerField.includes('count') || lowerField.includes('number')) return 'Integer';
+            if (lowerField.includes('status') || lowerField.includes('type')) return 'String/Enum';
+
+            // Try to infer from sample data
+            if (data && data.length > 0) {
+                const sample = data[0][fieldName];
+                if (sample && !isNaN(sample)) {
+                    return sample.includes('.') ? 'Decimal' : 'Integer';
+                }
+            }
+
+            return 'String/VARCHAR';
+        }
+
+        function generateAliases(fieldName) {
+            const snake = fieldName.toLowerCase().replace(/\s+/g, '_');
+            const camel = fieldName.replace(/\s+(.)/g, (_, c) => c.toUpperCase()).replace(/\s/g, '');
+            const abbrev = fieldName.split(/\s+/).map(w => w[0]).join('').toLowerCase();
+            return `${snake}, ${camel}, ${abbrev}`;
+        }
+
+        function generateSynonyms(fieldName) {
+            const synonymMap = {
+                'id': 'Identifier, Key, Reference',
+                'name': 'Title, Label, Designation',
+                'amount': 'Value, Sum, Total',
+                'date': 'Timestamp, Time, DateTime',
+                'status': 'State, Condition, Flag'
+            };
+
+            const lowerField = fieldName.toLowerCase();
+            for (let key in synonymMap) {
+                if (lowerField.includes(key)) {
+                    return synonymMap[key];
+                }
+            }
+
+            return 'N/A';
+        }
+
+        function isMetric(fieldName) {
+            const metricKeywords = ['ratio', 'rate', 'percentage', 'total', 'count', 'average', 'sum', 'score'];
+            const lowerField = fieldName.toLowerCase();
+            return metricKeywords.some(keyword => lowerField.includes(keyword));
+        }
+
+        function generateFormula(fieldName) {
+            const lowerField = fieldName.toLowerCase();
+            if (lowerField.includes('ratio')) {
+                return 'Numerator / Denominator * 100';
+            }
+            if (lowerField.includes('total') || lowerField.includes('sum')) {
+                return 'SUM(Individual Values)';
+            }
+            if (lowerField.includes('average')) {
+                return 'SUM(Values) / COUNT(Values)';
+            }
+            if (lowerField.includes('percentage')) {
+                return '(Part / Whole) * 100';
+            }
+            return '';
+        }
+
+        function extractTermsFromJSON(data, context) {
+            const terms = [];
+
+            function processObject(obj, prefix = '') {
+                for (let key in obj) {
+                    const value = obj[key];
+                    const fullKey = prefix ? `${prefix}.${key}` : key;
+
+                    if (typeof value === 'object' && !Array.isArray(value) && value !== null) {
+                        if (value.description || value.type) {
+                            // This looks like a schema definition
+                            terms.push({
+                                title: formatFieldName(key),
+                                description: value.description || generateDescription(key, context),
+                                examples: value.example || value.examples || 'N/A',
+                                business_logic: generateBusinessLogic(key, context),
+                                data_type: value.type || inferDataType(key, []),
+                                technical_aliases: generateAliases(key),
+                                synonyms: generateSynonyms(key),
+                                logical_formula: value.formula || value.calculation || ''
+                            });
+                        } else {
+                            processObject(value, fullKey);
+                        }
+                    }
+                }
+            }
+
+            processObject(data);
+            return terms;
+        }
+
+        function extractTermsFromText(content, context) {
+            const terms = [];
+            const lines = content.split('\n').filter(line => line.trim());
+
+            // Look for patterns like "Term: description" or "Term - description"
+            const termPattern = /^([A-Z][A-Za-z\s]+)[:|-]\s*(.+)$/;
+
+            for (let line of lines) {
+                const match = line.match(termPattern);
+                if (match) {
+                    const title = match[1].trim();
+                    const description = match[2].trim();
+
+                    terms.push({
+                        title: title,
+                        description: description,
+                        examples: 'See documentation',
+                        business_logic: generateBusinessLogic(title, context),
+                        data_type: inferDataType(title, []),
+                        technical_aliases: generateAliases(title),
+                        synonyms: generateSynonyms(title),
+                        logical_formula: isMetric(title) ? generateFormula(title) : ''
+                    });
+                }
+            }
+
+            return terms;
+        }
+
+        // Handle form submission
+        uploadForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const file = fileInput.files[0];
+            if (!file) {
+                showError('Please select a file');
+                return;
+            }
+
+            // Reset UI
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+            resultsSection.style.display = 'none';
+
+            // Show loading state
+            submitBtn.disabled = true;
+            btnText.textContent = 'Processing...';
+            spinner.style.display = 'inline-block';
+
+            try {
+                const fileType = file.name.split('.').pop().toLowerCase();
+                const fileContent = await readFileContent(file);
+                const context = businessContext.value;
+
+                // Generate glossary
+                currentGlossaryData = generateGlossaryFromContent(fileContent, fileType, context);
+
+                // Display results
+                displayGlossary(currentGlossaryData);
+                resultsSection.style.display = 'block';
+                showSuccess(`Successfully generated ${currentGlossaryData.length} glossary entries!`);
+
+                // Scroll to results
+                resultsSection.scrollIntoView({ behavior: 'smooth' });
+            } catch (error) {
+                showError('Error processing file: ' + error.message);
+                console.error('Error:', error);
+            } finally {
+                // Reset button state
+                submitBtn.disabled = false;
+                btnText.textContent = 'Generate Glossary';
+                spinner.style.display = 'none';
+            }
+        });
+
+        // Read file content
+        function readFileContent(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = (e) => reject(new Error('Failed to read file'));
+                reader.readAsText(file);
+            });
+        }
+
+        // Display glossary in table
+        function displayGlossary(glossary) {
+            glossaryBody.innerHTML = '';
+
+            glossary.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${escapeHtml(item.title)}</strong></td>
+                    <td>${escapeHtml(item.description)}</td>
+                    <td>${escapeHtml(item.examples)}</td>
+                    <td>${escapeHtml(item.business_logic)}</td>
+                    <td>${escapeHtml(item.data_type)}</td>
+                    <td>${escapeHtml(item.technical_aliases)}</td>
+                    <td>${escapeHtml(item.synonyms)}</td>
+                    <td>${escapeHtml(item.logical_formula || '-')}</td>
+                `;
+                glossaryBody.appendChild(row);
+            });
+        }
+
+        // Show error message
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            errorMessage.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Show success message
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successMessage.style.display = 'block';
+        }
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Export to CSV
+        exportBtn.addEventListener('click', function() {
+            if (currentGlossaryData.length === 0) {
+                return;
+            }
+
+            const headers = ['Title', 'Description', 'Examples', 'Business Logic', 'Data Type', 'Technical Aliases', 'Synonyms', 'Logical Formula'];
+
+            let csv = headers.join(',') + '\n';
+
+            currentGlossaryData.forEach(item => {
+                const row = [
+                    item.title,
+                    item.description,
+                    item.examples,
+                    item.business_logic,
+                    item.data_type,
+                    item.technical_aliases,
+                    item.synonyms,
+                    item.logical_formula || ''
+                ].map(field => {
+                    const escaped = String(field).replace(/"/g, '""');
+                    return `"${escaped}"`;
+                });
+
+                csv += row.join(',') + '\n';
+            });
+
+            // Create download link
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'business_glossary.csv';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        });
+
+        // Drag and drop support
+        const fileInputWrapper = document.querySelector('.file-input-wrapper');
+        const fileInputLabel = document.querySelector('.file-input-label');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            fileInputWrapper.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            fileInputWrapper.addEventListener(eventName, () => {
+                fileInputLabel.classList.add('highlight');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            fileInputWrapper.addEventListener(eventName, () => {
+                fileInputLabel.classList.remove('highlight');
+            }, false);
+        });
+    </script>
+</body>
+</html>
