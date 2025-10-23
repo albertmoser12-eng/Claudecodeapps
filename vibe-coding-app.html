@@ -433,6 +433,41 @@
                     <strong>⚠️ Important:</strong> This foundation prevents costly rewrites and ensures AI generates code that fits your actual needs. Don't skip this step!
                 </div>
 
+                <h3>Select Your Industry Use Case</h3>
+                <p>Choose an insurance sector use case to guide your user story generation:</p>
+
+                <div class="checklist">
+                    <div class="checklist-item" onclick="selectUseCase(this, 'claims-processing')">
+                        <input type="radio" name="usecase" value="claims-processing">
+                        <label><strong>Claims Processing Automation</strong> - Streamline claims intake, assessment, and approval workflows</label>
+                    </div>
+                    <div class="checklist-item" onclick="selectUseCase(this, 'underwriting')">
+                        <input type="radio" name="usecase" value="underwriting">
+                        <label><strong>Underwriting Decision Support</strong> - Risk assessment and policy pricing optimization</label>
+                    </div>
+                    <div class="checklist-item" onclick="selectUseCase(this, 'policy-management')">
+                        <input type="radio" name="usecase" value="policy-management">
+                        <label><strong>Policy Management System</strong> - Policy lifecycle management from quote to renewal</label>
+                    </div>
+                    <div class="checklist-item" onclick="selectUseCase(this, 'fraud-detection')">
+                        <input type="radio" name="usecase" value="fraud-detection">
+                        <label><strong>Fraud Detection & Prevention</strong> - AI-powered anomaly detection and investigation tools</label>
+                    </div>
+                    <div class="checklist-item" onclick="selectUseCase(this, 'customer-portal')">
+                        <input type="radio" name="usecase" value="customer-portal">
+                        <label><strong>Customer Self-Service Portal</strong> - Digital experience for policyholders</label>
+                    </div>
+                    <div class="checklist-item" onclick="selectUseCase(this, 'agent-crm')">
+                        <input type="radio" name="usecase" value="agent-crm">
+                        <label><strong>Agent CRM & Commission Tracking</strong> - Sales management and compensation system</label>
+                    </div>
+                </div>
+
+                <div class="success-box" id="useCaseSelected" style="display: none;">
+                    <strong>✓ Use Case Selected:</strong> <span id="selectedUseCaseText"></span>
+                    <br><small>Your user stories in Step 2 will be tailored to this use case.</small>
+                </div>
+
                 <div class="navigation">
                     <button class="secondary" disabled>← Previous</button>
                     <button onclick="nextSection()">Next: User Stories →</button>
@@ -695,10 +730,12 @@
         let iterations = [];
         let generatedUserStory = null;
         let generatedSpec = null;
+        let selectedUseCase = null;
 
         // Sample user stories for the shuffle feature
         const sampleUserStories = [
             {
+                useCase: "general",
                 role: "Support Team Manager",
                 action: "collect and categorize customer feedback in a centralized system",
                 benefit: "we can identify trends and improve our products based on real user needs",
@@ -717,6 +754,7 @@
                 ]
             },
             {
+                useCase: "general",
                 role: "Sales Representative",
                 action: "track customer interactions and follow-up tasks in one place",
                 benefit: "I never miss important follow-ups and can build stronger customer relationships",
@@ -735,6 +773,7 @@
                 ]
             },
             {
+                useCase: "general",
                 role: "Project Manager",
                 action: "visualize project progress and resource allocation across teams",
                 benefit: "I can identify bottlenecks early and make data-driven decisions",
@@ -753,6 +792,7 @@
                 ]
             },
             {
+                useCase: "general",
                 role: "HR Administrator",
                 action: "automate employee onboarding with document collection and task tracking",
                 benefit: "new hires have a smooth experience and compliance requirements are met",
@@ -772,6 +812,7 @@
                 ]
             },
             {
+                useCase: "general",
                 role: "Finance Analyst",
                 action: "consolidate expense reports from multiple departments automatically",
                 benefit: "I can reduce manual data entry and produce accurate budget reports faster",
@@ -788,6 +829,145 @@
                     "Integration with accounting systems (QuickBooks, SAP)",
                     "Audit trail for all transactions",
                     "Currency conversion for international expenses"
+                ]
+            },
+            // Insurance Sector User Stories
+            {
+                useCase: "claims-processing",
+                role: "Claims Adjuster",
+                action: "automate claims intake and initial assessment with AI-assisted damage evaluation",
+                benefit: "I can process more claims faster while maintaining accuracy and reducing fraud",
+                acceptanceCriteria: [
+                    "Accept claims via web portal, mobile app, and API integration",
+                    "AI-powered image analysis for damage assessment",
+                    "Automatic assignment to appropriate adjuster based on claim type and workload",
+                    "Real-time status updates for policyholders",
+                    "Fraud detection alerts based on pattern analysis",
+                    "Integration with payment systems for approved claims"
+                ],
+                technicalConsiderations: [
+                    "Machine learning models for damage assessment and fraud detection",
+                    "Secure document storage for claim evidence (photos, reports)",
+                    "Real-time notification system (SMS, email, push)",
+                    "Integration with policy management system",
+                    "Compliance with insurance regulations (state-specific)",
+                    "Audit trail for all claim decisions"
+                ]
+            },
+            {
+                useCase: "underwriting",
+                role: "Underwriter",
+                action: "leverage AI-powered risk assessment tools to evaluate policy applications quickly",
+                benefit: "I can make data-driven decisions, price policies accurately, and reduce approval time",
+                acceptanceCriteria: [
+                    "Automated data collection from multiple sources (credit, public records, telematics)",
+                    "Risk scoring engine with explainable AI outputs",
+                    "What-if analysis for pricing scenarios",
+                    "Automated approval for low-risk applications within predefined parameters",
+                    "Integration with external data providers (MVR, CLUE, credit bureaus)",
+                    "Dashboard showing portfolio risk distribution"
+                ],
+                technicalConsiderations: [
+                    "API integrations with external data providers",
+                    "ML models for risk prediction with model explainability",
+                    "Real-time calculation engine for premium pricing",
+                    "Role-based access control for sensitive information",
+                    "Compliance with fair lending and anti-discrimination laws",
+                    "Version control for rating algorithms and audit trails"
+                ]
+            },
+            {
+                useCase: "policy-management",
+                role: "Policy Administrator",
+                action: "manage the complete policy lifecycle from quote to renewal in a single system",
+                benefit: "I can reduce errors, improve customer experience, and increase renewal rates",
+                acceptanceCriteria: [
+                    "Quote generation with real-time pricing",
+                    "Digital policy issuance and e-signature capability",
+                    "Mid-term endorsements and policy changes",
+                    "Automated renewal processing with lapse prevention",
+                    "Billing and payment integration",
+                    "Document generation and storage for all policy documents"
+                ],
+                technicalConsiderations: [
+                    "Integration with underwriting and claims systems",
+                    "Rating engine for premium calculations",
+                    "Workflow engine for approval processes",
+                    "E-signature integration (DocuSign, Adobe Sign)",
+                    "Payment gateway integration",
+                    "Document management with version control",
+                    "State-specific forms and compliance rules"
+                ]
+            },
+            {
+                useCase: "fraud-detection",
+                role: "Special Investigator",
+                action: "identify suspicious claims and patterns using AI-powered fraud detection tools",
+                benefit: "I can investigate high-risk cases more efficiently and reduce fraudulent payouts",
+                acceptanceCriteria: [
+                    "Real-time fraud scoring for incoming claims",
+                    "Pattern detection across claims (e.g., similar providers, locations, injuries)",
+                    "Link analysis to identify relationships between claimants, providers, and attorneys",
+                    "Anomaly detection for unusual claim characteristics",
+                    "Case management with evidence tracking and investigation notes",
+                    "Reporting and analytics dashboard for fraud trends"
+                ],
+                technicalConsiderations: [
+                    "Machine learning models for fraud detection",
+                    "Graph database for relationship mapping",
+                    "Integration with external fraud databases (NICB, ISO)",
+                    "Natural language processing for claim narratives",
+                    "Secure access to sensitive investigation data",
+                    "API integration with claims management system",
+                    "Compliance with privacy laws during investigations"
+                ]
+            },
+            {
+                useCase: "customer-portal",
+                role: "Policyholder",
+                action: "access my insurance information and perform self-service tasks through a mobile-friendly portal",
+                benefit: "I can manage my policies 24/7 without calling customer service",
+                acceptanceCriteria: [
+                    "View all active policies and coverage details",
+                    "Make payments and view billing history",
+                    "File and track claims with photo upload capability",
+                    "Request policy changes (address, vehicle, coverage)",
+                    "Download ID cards and policy documents",
+                    "Chat support with AI-powered virtual assistant",
+                    "Secure authentication with multi-factor options"
+                ],
+                technicalConsiderations: [
+                    "Responsive web design and native mobile apps (iOS, Android)",
+                    "Integration with policy, billing, and claims systems",
+                    "Secure authentication (OAuth 2.0, biometric)",
+                    "Push notifications for important updates",
+                    "Chatbot with NLP for common inquiries",
+                    "Document viewer and secure download",
+                    "Payment gateway integration (PCI DSS compliance)"
+                ]
+            },
+            {
+                useCase: "agent-crm",
+                role: "Insurance Agent",
+                action: "track my sales pipeline and commission earnings in a unified system",
+                benefit: "I can focus on selling while the system handles administrative tasks and commission calculations",
+                acceptanceCriteria: [
+                    "Lead and opportunity management with pipeline tracking",
+                    "Quote generation integrated with rating engine",
+                    "Policy binding and submission workflow",
+                    "Real-time commission tracking and statements",
+                    "Customer relationship management with interaction history",
+                    "Task management and calendar integration",
+                    "Performance dashboard with sales metrics"
+                ],
+                technicalConsiderations: [
+                    "Integration with policy management and underwriting systems",
+                    "Commission calculation engine with configurable rules",
+                    "Calendar API integration (Google Calendar, Outlook)",
+                    "Email integration for communication tracking",
+                    "Mobile-responsive design for field agents",
+                    "Role-based access for agency hierarchy (agent, manager, owner)",
+                    "Reporting engine for sales analytics"
                 ]
             }
         ];
@@ -835,8 +1015,47 @@
             checkbox.checked = !checkbox.checked;
         }
 
+        function selectUseCase(element, useCase) {
+            // Update radio button
+            const radio = element.querySelector('input[type="radio"]');
+            radio.checked = true;
+
+            // Store selected use case
+            selectedUseCase = useCase;
+
+            // Show success message
+            const successBox = document.getElementById('useCaseSelected');
+            const useCaseText = document.getElementById('selectedUseCaseText');
+
+            const useCaseNames = {
+                'claims-processing': 'Claims Processing Automation',
+                'underwriting': 'Underwriting Decision Support',
+                'policy-management': 'Policy Management System',
+                'fraud-detection': 'Fraud Detection & Prevention',
+                'customer-portal': 'Customer Self-Service Portal',
+                'agent-crm': 'Agent CRM & Commission Tracking'
+            };
+
+            useCaseText.textContent = useCaseNames[useCase];
+            successBox.style.display = 'block';
+        }
+
         function generateUserStory() {
-            const randomStory = sampleUserStories[Math.floor(Math.random() * sampleUserStories.length)];
+            // Filter stories by selected use case
+            let availableStories = sampleUserStories;
+            if (selectedUseCase) {
+                availableStories = sampleUserStories.filter(story => story.useCase === selectedUseCase);
+            } else {
+                // If no use case selected, use general stories
+                availableStories = sampleUserStories.filter(story => story.useCase === 'general');
+            }
+
+            if (availableStories.length === 0) {
+                alert('No user stories available for the selected use case. Please try another.');
+                return;
+            }
+
+            const randomStory = availableStories[Math.floor(Math.random() * availableStories.length)];
             generatedUserStory = randomStory;
 
             const output = document.getElementById('userStoryOutput');
@@ -1303,6 +1522,446 @@ POST   /api/integrations/accounting/sync  Sync with QuickBooks/SAP`,
                         "Accounting system sync completes within 1 minute for 500 expenses"
                     ]
                 }
+            };
+
+            // Insurance sector specifications
+            specs["Claims Adjuster"] = {
+                scope: "Build an automated claims processing system with AI-assisted damage assessment, workflow management, and fraud detection capabilities.",
+                dataModels: `Claim {
+  id: UUID
+  policyId: UUID
+  claimNumber: String
+  claimType: String (auto, property, liability)
+  dateOfLoss: Date
+  reportedDate: Date
+  status: String (pending, under-review, approved, denied, paid)
+  estimatedAmount: Decimal
+  approvedAmount: Decimal
+  assignedAdjusterId: UUID
+  fraudScore: Decimal
+}
+
+ClaimEvidence {
+  id: UUID
+  claimId: UUID
+  type: String (photo, document, video)
+  url: String
+  uploadedAt: Timestamp
+  aiAnalysisResults: JSON
+}
+
+ClaimActivity {
+  id: UUID
+  claimId: UUID
+  activityType: String
+  description: Text
+  performedBy: UUID
+  timestamp: Timestamp
+}`,
+                apiEndpoints: `POST   /api/claims                    Create new claim
+GET    /api/claims                    List claims (filtered)
+GET    /api/claims/:id                Get claim details
+PUT    /api/claims/:id                Update claim
+POST   /api/claims/:id/evidence       Upload evidence
+POST   /api/claims/:id/assess         Run AI damage assessment
+POST   /api/claims/:id/approve        Approve claim
+POST   /api/claims/:id/deny           Deny claim
+GET    /api/claims/:id/activity       Get activity log
+POST   /api/payments/:claimId         Process payment`,
+                businessRules: [
+                    "Claims must be reported within policy time limits",
+                    "AI assessment confidence > 80% auto-approves claims under $5000",
+                    "Fraud score > 0.7 triggers automatic investigation",
+                    "All claim decisions must be documented with reasons",
+                    "Payments processed only after claim approval",
+                    "Status updates trigger notifications to policyholders"
+                ],
+                securityRequirements: [
+                    "HIPAA compliance for medical claims",
+                    "Encrypted storage for sensitive claim evidence",
+                    "Role-based access (adjuster, supervisor, investigator)",
+                    "Audit trail for all claim decisions and payments",
+                    "State-specific regulatory compliance"
+                ],
+                performanceCriteria: [
+                    "AI assessment completes within 30 seconds",
+                    "Support 10,000 concurrent claims",
+                    "API response time < 500ms",
+                    "Image processing handles up to 20 photos per claim",
+                    "99.9% uptime for claims submission"
+                ]
+            };
+
+            specs["Underwriter"] = {
+                scope: "Create an intelligent underwriting platform with AI-powered risk assessment, data aggregation, and automated decision-making for policy applications.",
+                dataModels: `Application {
+  id: UUID
+  applicantId: UUID
+  policyType: String (auto, home, life, commercial)
+  status: String (pending, approved, declined, referred)
+  submittedDate: Date
+  decisionDate: Date
+  riskScore: Decimal
+  premiumQuote: Decimal
+  underwriterId: UUID
+}
+
+RiskFactor {
+  id: UUID
+  applicationId: UUID
+  factorType: String
+  value: String
+  weight: Decimal
+  source: String
+}
+
+ExternalData {
+  id: UUID
+  applicationId: UUID
+  provider: String (MVR, credit, CLUE)
+  data: JSON
+  retrievedAt: Timestamp
+}
+
+UnderwritingRule {
+  id: UUID
+  policyType: String
+  condition: JSON
+  action: String (approve, decline, refer)
+  priority: Integer
+}`,
+                apiEndpoints: `POST   /api/applications              Submit application
+GET    /api/applications/:id          Get application details
+POST   /api/applications/:id/assess   Run risk assessment
+POST   /api/applications/:id/decide   Make underwriting decision
+GET    /api/external-data/:id         Fetch external data
+POST   /api/pricing/calculate         Calculate premium
+GET    /api/rules                     Get underwriting rules
+PUT    /api/rules/:id                 Update rule`,
+                businessRules: [
+                    "Applications with risk score < 60 auto-approve",
+                    "Applications with risk score > 85 auto-decline",
+                    "Mid-range scores (60-85) require manual review",
+                    "All external data must be < 30 days old",
+                    "Premium calculations follow state-approved rating algorithms",
+                    "Declined applications include explanation for compliance"
+                ],
+                securityRequirements: [
+                    "Fair Credit Reporting Act (FCRA) compliance",
+                    "Anti-discrimination law compliance (no biased factors)",
+                    "Encrypted API calls to external data providers",
+                    "Model explainability for AI decisions",
+                    "Version control for rating algorithms"
+                ],
+                performanceCriteria: [
+                    "Risk assessment completes within 10 seconds",
+                    "External data retrieval < 5 seconds per source",
+                    "Support 500 concurrent applications",
+                    "Premium calculation < 2 seconds",
+                    "Model accuracy > 90% on risk predictions"
+                ]
+            };
+
+            specs["Policy Administrator"] = {
+                scope: "Develop a comprehensive policy lifecycle management system handling quotes, issuance, endorsements, renewals, and billing.",
+                dataModels: `Policy {
+  id: UUID
+  policyNumber: String
+  policyholderID: UUID
+  policyType: String
+  effectiveDate: Date
+  expirationDate: Date
+  status: String (active, expired, cancelled, lapsed)
+  premium: Decimal
+  coverages: JSON
+  deductibles: JSON
+}
+
+Quote {
+  id: UUID
+  quoteNumber: String
+  prospectId: UUID
+  expiresAt: Timestamp
+  premium: Decimal
+  coverages: JSON
+  convertedToPolicyId: UUID
+}
+
+Endorsement {
+  id: UUID
+  policyId: UUID
+  effectiveDate: Date
+  changeType: String
+  premiumAdjustment: Decimal
+  description: Text
+  status: String
+}
+
+Invoice {
+  id: UUID
+  policyId: UUID
+  amount: Decimal
+  dueDate: Date
+  paidDate: Date
+  status: String (pending, paid, overdue, cancelled)
+}`,
+                apiEndpoints: `POST   /api/quotes                    Generate quote
+GET    /api/quotes/:id                Get quote details
+POST   /api/quotes/:id/convert        Convert to policy
+POST   /api/policies                  Issue new policy
+GET    /api/policies/:id              Get policy details
+POST   /api/policies/:id/endorse      Create endorsement
+POST   /api/policies/:id/renew        Process renewal
+POST   /api/policies/:id/cancel       Cancel policy
+GET    /api/invoices                  List invoices
+POST   /api/invoices/:id/pay          Process payment`,
+                businessRules: [
+                    "Quotes expire after 30 days unless extended",
+                    "Policy changes effective on date specified or next billing cycle",
+                    "Premium adjustments calculated pro-rata for mid-term changes",
+                    "Renewal notices sent 45 days before expiration",
+                    "Policies lapse if payment not received within 30 days",
+                    "Cancellations require notice per state regulations"
+                ],
+                securityRequirements: [
+                    "E-signature compliance (ESIGN Act, UETA)",
+                    "Document retention per state requirements (typically 7 years)",
+                    "PCI DSS compliance for payment processing",
+                    "Encrypted document storage",
+                    "Access controls for policy modifications"
+                ],
+                performanceCriteria: [
+                    "Quote generation < 3 seconds",
+                    "Policy issuance < 5 seconds including document generation",
+                    "Support 1000 concurrent policy operations",
+                    "Document generation < 10 seconds for all forms",
+                    "Payment processing < 30 seconds end-to-end"
+                ]
+            };
+
+            specs["Special Investigator"] = {
+                scope: "Build an AI-powered fraud detection and investigation management system with pattern analysis, relationship mapping, and case tracking.",
+                dataModels: `FraudAlert {
+  id: UUID
+  claimId: UUID
+  alertType: String
+  severity: String (low, medium, high, critical)
+  fraudScore: Decimal
+  indicators: JSON
+  status: String (new, investigating, closed)
+  investigatorId: UUID
+}
+
+Investigation {
+  id: UUID
+  claimId: UUID
+  openedDate: Date
+  closedDate: Date
+  outcome: String (no-fraud, suspected, confirmed)
+  findings: Text
+  evidence: Array<UUID>
+  investigatorId: UUID
+}
+
+EntityRelationship {
+  id: UUID
+  sourceEntityId: UUID
+  sourceEntityType: String
+  targetEntityId: UUID
+  targetEntityType: String
+  relationshipType: String
+  strength: Decimal
+}
+
+ExternalFraudData {
+  id: UUID
+  source: String (NICB, ISO)
+  data: JSON
+  queriedAt: Timestamp
+}`,
+                apiEndpoints: `GET    /api/fraud-alerts               List fraud alerts
+GET    /api/fraud-alerts/:id           Get alert details
+POST   /api/fraud-alerts/:id/assign    Assign to investigator
+POST   /api/investigations             Create investigation
+PUT    /api/investigations/:id         Update investigation
+POST   /api/investigations/:id/close   Close investigation
+GET    /api/relationships              Analyze relationships
+POST   /api/fraud/pattern-analysis     Run pattern detection
+GET    /api/fraud/external-check       Query external databases`,
+                businessRules: [
+                    "High severity alerts require immediate investigation",
+                    "Pattern analysis runs nightly on all claims",
+                    "Investigations must be completed within 30 days",
+                    "Confirmed fraud cases trigger claim denial automatically",
+                    "All investigative actions logged for legal compliance",
+                    "External database queries limited to prevent abuse"
+                ],
+                securityRequirements: [
+                    "Special access controls for investigation data",
+                    "Privacy law compliance during investigations",
+                    "Encrypted communication with external databases",
+                    "Chain of custody for digital evidence",
+                    "Audit trail for all fraud determinations"
+                ],
+                performanceCriteria: [
+                    "Real-time fraud scoring < 2 seconds",
+                    "Pattern detection completes overnight for 100K claims",
+                    "Relationship analysis < 10 seconds",
+                    "Support 500 concurrent investigations",
+                    "External database queries < 5 seconds"
+                ]
+            };
+
+            specs["Policyholder"] = {
+                scope: "Create a comprehensive customer self-service portal with policy management, claims filing, payments, and AI-powered support.",
+                dataModels: `User {
+  id: UUID
+  email: String
+  phone: String
+  authenticationType: String
+  lastLogin: Timestamp
+  preferences: JSON
+}
+
+PolicyView {
+  id: UUID
+  userId: UUID
+  policyNumber: String
+  coveragesSummary: JSON
+  premium: Decimal
+  nextBillingDate: Date
+  status: String
+}
+
+ServiceRequest {
+  id: UUID
+  userId: UUID
+  requestType: String
+  details: JSON
+  status: String
+  submittedAt: Timestamp
+}
+
+ChatSession {
+  id: UUID
+  userId: UUID
+  messages: JSON
+  sentiment: String
+  escalated: Boolean
+  startedAt: Timestamp
+}`,
+                apiEndpoints: `POST   /api/auth/login                 User login
+POST   /api/auth/mfa                   Multi-factor auth
+GET    /api/policies                   List user policies
+GET    /api/policies/:id               Get policy details
+GET    /api/policies/:id/documents     Get documents
+POST   /api/claims/file                File new claim
+GET    /api/claims/:id/status          Track claim status
+POST   /api/payments                   Make payment
+GET    /api/billing/history            Get billing history
+POST   /api/service-requests           Submit request
+POST   /api/chat/message               Send chat message`,
+                businessRules: [
+                    "Users can only access their own policies and claims",
+                    "Payment confirmation sent via email and SMS",
+                    "Claims with photos auto-route to AI assessment",
+                    "Service requests acknowledged within 1 hour",
+                    "Chatbot escalates to human if confidence < 70%",
+                    "ID cards regenerated immediately after policy change"
+                ],
+                securityRequirements: [
+                    "Multi-factor authentication for sensitive operations",
+                    "OAuth 2.0 for API authentication",
+                    "Biometric login support (fingerprint, face ID)",
+                    "PCI DSS compliance for payment processing",
+                    "Session timeout after 15 minutes inactivity",
+                    "TLS 1.3 for all communications"
+                ],
+                performanceCriteria: [
+                    "Page load time < 2 seconds on mobile networks",
+                    "Support 50,000 concurrent users",
+                    "Chatbot response time < 1 second",
+                    "Document download < 3 seconds",
+                    "Payment processing < 30 seconds",
+                    "Push notifications delivered within 10 seconds"
+                ]
+            };
+
+            specs["Insurance Agent"] = {
+                scope: "Build a comprehensive CRM and sales management platform with pipeline tracking, quote generation, commission calculation, and performance analytics.",
+                dataModels: `Lead {
+  id: UUID
+  source: String
+  contactInfo: JSON
+  status: String (new, contacted, quoted, closed-won, closed-lost)
+  assignedAgentId: UUID
+  createdAt: Timestamp
+}
+
+Opportunity {
+  id: UUID
+  leadId: UUID
+  policyType: String
+  estimatedPremium: Decimal
+  probability: Decimal
+  expectedCloseDate: Date
+  stage: String
+}
+
+Commission {
+  id: UUID
+  policyId: UUID
+  agentId: UUID
+  commissionType: String (new, renewal)
+  rate: Decimal
+  amount: Decimal
+  status: String (pending, paid)
+  paidDate: Date
+}
+
+Activity {
+  id: UUID
+  relatedToId: UUID
+  relatedToType: String (lead, opportunity, policy)
+  activityType: String (call, email, meeting)
+  notes: Text
+  scheduledAt: Timestamp
+  completedAt: Timestamp
+}`,
+                apiEndpoints: `POST   /api/leads                      Create lead
+GET    /api/leads                      List leads (filtered)
+PUT    /api/leads/:id                  Update lead
+POST   /api/leads/:id/convert          Convert to opportunity
+GET    /api/opportunities              List opportunities
+POST   /api/quotes/generate            Generate quote
+POST   /api/policies/bind              Bind policy
+GET    /api/commissions                View commission statements
+GET    /api/commissions/projected      Project earnings
+POST   /api/activities                 Log activity
+GET    /api/dashboard/metrics          Get performance metrics`,
+                businessRules: [
+                    "Leads auto-assigned based on territory and workload",
+                    "Opportunities move through stages: prospect, quote, negotiation, closed",
+                    "Commissions calculated when policy is issued",
+                    "Renewal commissions are lower than new business",
+                    "Activities automatically sync with integrated calendar",
+                    "Performance metrics calculated monthly"
+                ],
+                securityRequirements: [
+                    "Agent can only access their own leads unless manager",
+                    "Commission data encrypted and access-controlled",
+                    "Email integration uses OAuth 2.0",
+                    "Compliance with insurance agent licensing requirements",
+                    "Audit trail for all quote and policy operations"
+                ],
+                performanceCriteria: [
+                    "Lead list loads < 2 seconds",
+                    "Quote generation < 5 seconds",
+                    "Support 5,000 agents simultaneously",
+                    "Calendar sync completes within 10 seconds",
+                    "Dashboard metrics calculate in < 3 seconds",
+                    "Mobile app offline mode for field agents"
+                ]
             };
 
             return specs[story.role] || {
