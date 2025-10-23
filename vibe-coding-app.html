@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vibe Coding Guide - Enterprise AI-Assisted Development</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .progress-bar {
+            display: flex;
+            justify-content: space-between;
+            background: #f5f5f5;
+            padding: 20px 40px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .progress-step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .progress-step::before {
+            content: attr(data-step);
+            display: block;
+            width: 40px;
+            height: 40px;
+            background: #ccc;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            line-height: 40px;
+            font-weight: bold;
+            color: white;
+            transition: all 0.3s;
+        }
+
+        .progress-step.active::before {
+            background: #667eea;
+            transform: scale(1.2);
+        }
+
+        .progress-step.completed::before {
+            background: #10b981;
+            content: "✓";
+        }
+
+        .progress-step span {
+            display: block;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .progress-step.active span {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h2 {
+            color: #667eea;
+            font-size: 2em;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            color: #764ba2;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        p, li {
+            line-height: 1.8;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        ul {
+            margin-left: 20px;
+            margin-bottom: 20px;
+        }
+
+        .info-box {
+            background: #e0e7ff;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .warning-box {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .success-box {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1em;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.secondary {
+            background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+            box-shadow: 0 4px 15px rgba(100, 116, 139, 0.4);
+        }
+
+        button.secondary:hover {
+            box-shadow: 0 6px 20px rgba(100, 116, 139, 0.6);
+        }
+
+        .output-area {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            min-height: 150px;
+            display: none;
+        }
+
+        .output-area.visible {
+            display: block;
+            animation: slideDown 0.4s;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; max-height: 0; }
+            to { opacity: 1; max-height: 1000px; }
+        }
+
+        .output-area h4 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .user-story-template {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #10b981;
+            margin-top: 10px;
+        }
+
+        .spec-template {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #3b82f6;
+            margin-top: 10px;
+        }
+
+        .code-template {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+
+        .code-template pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 2px solid #e5e7eb;
+        }
+
+        .checklist {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .checklist-item:hover {
+            background: #e0e7ff;
+        }
+
+        .checklist-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 15px;
+            cursor: pointer;
+        }
+
+        .iteration-log {
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .iteration-entry {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #667eea;
+            border-radius: 5px;
+        }
+
+        .iteration-entry h5 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin: 5px 5px 5px 0;
+        }
+
+        .badge-new { background: #dbeafe; color: #1e40af; }
+        .badge-updated { background: #fef3c7; color: #92400e; }
+        .badge-completed { background: #d1fae5; color: #065f46; }
+
+        footer {
+            background: #f9fafb;
+            padding: 20px 40px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e5e7eb;
+        }
+
+        code {
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #be123c;
+        }
+
+        .tip {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+
+        .tip strong {
+            color: #92400e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 Vibe Coding Guide</h1>
+            <p>AI-Assisted Development for Enterprise Applications</p>
+        </header>
+
+        <div class="progress-bar">
+            <div class="progress-step active" data-step="1" onclick="goToSection(0)">
+                <span>Preparation</span>
+            </div>
+            <div class="progress-step" data-step="2" onclick="goToSection(1)">
+                <span>User Stories</span>
+            </div>
+            <div class="progress-step" data-step="3" onclick="goToSection(2)">
+                <span>Specification</span>
+            </div>
+            <div class="progress-step" data-step="4" onclick="goToSection(3)">
+                <span>Code Generation</span>
+            </div>
+            <div class="progress-step" data-step="5" onclick="goToSection(4)">
+                <span>Iteration</span>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- Section 1: Preparation -->
+            <div class="section active" id="section-0">
+                <h2>📋 Step 1: Preparation</h2>
+
+                <div class="info-box">
+                    <h3>What is Vibe Coding?</h3>
+                    <p>Vibe coding is an AI-assisted development approach where you describe what you want in natural language, and AI tools help translate that into working code. In enterprise settings, this accelerates development while maintaining quality through proper specifications and iteration.</p>
+                </div>
+
+                <h3>Prerequisites Before You Code</h3>
+                <p>Before writing any code, ensure you have these foundations in place:</p>
+
+                <div class="checklist">
+                    <div class="checklist-item" onclick="toggleCheck(this)">
+                        <input type="checkbox">
+                        <label><strong>Define the MVP</strong> - What's the smallest version that delivers value?</label>
+                    </div>
+                    <div class="checklist-item" onclick="toggleCheck(this)">
+                        <input type="checkbox">
+                        <label><strong>Establish Technical Requirements</strong> - Authentication, data storage, integrations</label>
+                    </div>
+                    <div class="checklist-item" onclick="toggleCheck(this)">
+                        <input type="checkbox">
+                        <label><strong>Choose Your Stack</strong> - Technology decisions based on team and needs</label>
+                    </div>
+                    <div class="checklist-item" onclick="toggleCheck(this)">
+                        <input type="checkbox">
+                        <label><strong>Set Up Development Environment</strong> - Git, CI/CD, environments</label>
+                    </div>
+                    <div class="checklist-item" onclick="toggleCheck(this)">
+                        <input type="checkbox">
+                        <label><strong>Define Data Models</strong> - Entities, relationships, fields</label>
+                    </div>
+                </div>
+
+                <h3>Key Technical Considerations</h3>
+                <ul>
+                    <li><strong>Authentication & Authorization:</strong> Who can access what?</li>
+                    <li><strong>Data Storage:</strong> What data, how much, how long?</li>
+                    <li><strong>Integration Points:</strong> APIs, third-party services</li>
+                    <li><strong>Performance Expectations:</strong> Users, response times, scalability</li>
+                    <li><strong>Compliance Requirements:</strong> GDPR, SOC2, industry standards</li>
+                </ul>
+
+                <div class="warning-box">
+                    <strong>⚠️ Important:</strong> This foundation prevents costly rewrites and ensures AI generates code that fits your actual needs. Don't skip this step!
+                </div>
+
+                <div class="navigation">
+                    <button class="secondary" disabled>← Previous</button>
+                    <button onclick="nextSection()">Next: User Stories →</button>
+                </div>
+            </div>
+
+            <!-- Section 2: User Stories -->
+            <div class="section" id="section-1">
+                <h2>📝 Step 2: User Stories</h2>
+
+                <h3>Start with the Business Problem</h3>
+                <p>Begin by explaining the business context, user needs, and desired outcomes. AI works best when it understands the "why" behind your requirements.</p>
+
+                <div class="info-box">
+                    <strong>Example Context:</strong> "We need a customer feedback system because our support team manually tracks requests in spreadsheets, leading to lost feedback and delayed responses."
+                </div>
+
+                <h3>Generate a User Story</h3>
+                <p>User stories follow a structured format that helps AI understand your needs:</p>
+
+                <div class="button-group">
+                    <button onclick="generateUserStory()">🎲 User Story Shuffle</button>
+                    <button class="secondary" onclick="clearUserStory()">Clear</button>
+                </div>
+
+                <div class="output-area" id="userStoryOutput">
+                    <h4>Generated User Story</h4>
+                    <div class="user-story-template" id="userStoryContent">
+                        <!-- User story will be inserted here -->
+                    </div>
+                </div>
+
+                <h3>User Story Best Practices</h3>
+                <ul>
+                    <li>Start broad, then drill down into specifics</li>
+                    <li>Ask AI: "What requirements are we missing?"</li>
+                    <li>Request technical considerations: security, scalability, compliance</li>
+                    <li>Include acceptance criteria and test scenarios</li>
+                    <li>Define success metrics</li>
+                </ul>
+
+                <div class="tip">
+                    <strong>💡 Pro Tip:</strong> Save AI-generated specs in your repository alongside code for version control and team alignment.
+                </div>
+
+                <div class="navigation">
+                    <button class="secondary" onclick="previousSection()">← Previous</button>
+                    <button onclick="nextSection()">Next: Specification →</button>
+                </div>
+            </div>
+
+            <!-- Section 3: Specification -->
+            <div class="section" id="section-2">
+                <h2>📐 Step 3: Specification</h2>
+
+                <h3>Transform User Story into Technical Specification</h3>
+                <p>A good specification bridges business requirements and technical implementation. It should be detailed enough for AI to generate accurate code.</p>
+
+                <div class="button-group">
+                    <button onclick="generateSpecification()">📋 Write Specification</button>
+                    <button class="secondary" onclick="clearSpecification()">Clear</button>
+                </div>
+
+                <div class="output-area" id="specificationOutput">
+                    <h4>Generated Specification</h4>
+                    <div class="spec-template" id="specificationContent">
+                        <!-- Specification will be inserted here -->
+                    </div>
+                </div>
+
+                <h3>What Makes a Great Specification?</h3>
+                <ul>
+                    <li><strong>Clear Scope:</strong> What's in and what's out</li>
+                    <li><strong>Data Models:</strong> Entities, fields, relationships</li>
+                    <li><strong>API Contracts:</strong> Endpoints, methods, request/response formats</li>
+                    <li><strong>Business Rules:</strong> Validation logic, calculations, workflows</li>
+                    <li><strong>Edge Cases:</strong> Error handling, boundary conditions</li>
+                    <li><strong>Security Requirements:</strong> Authentication, authorization, data protection</li>
+                    <li><strong>Performance Criteria:</strong> Response times, throughput, scalability</li>
+                </ul>
+
+                <div class="success-box">
+                    <strong>✅ Living Documentation:</strong> Use AI to maintain specification documents that evolve with your code. Keep specifications in sync as requirements change.
+                </div>
+
+                <div class="navigation">
+                    <button class="secondary" onclick="previousSection()">← Previous</button>
+                    <button onclick="nextSection()">Next: Code Generation →</button>
+                </div>
+            </div>
+
+            <!-- Section 4: Code Generation -->
+            <div class="section" id="section-3">
+                <h2>💻 Step 4: Code Generation</h2>
+
+                <h3>From Specification to Working Code</h3>
+                <p>With a solid specification, AI can generate code that matches your requirements. The key is to be specific about your technology stack and coding standards.</p>
+
+                <div class="button-group">
+                    <button onclick="generateCode()">⚡ Generate Code</button>
+                    <button class="secondary" onclick="clearCode()">Clear</button>
+                </div>
+
+                <div class="output-area" id="codeOutput">
+                    <h4>Generated Code</h4>
+                    <div class="code-template" id="codeContent">
+                        <!-- Code will be inserted here -->
+                    </div>
+                </div>
+
+                <h3>Incremental Development Approach</h3>
+                <div class="checklist">
+                    <div class="checklist-item" onclick="toggleCheck(this)">
+                        <input type="checkbox">
+                        <label><strong>Week 1:</strong> Core data models + basic CRUD operations</label>
+                    </div>
+                    <div class="checklist-item" onclick="toggleCheck(this)">
+                        <input type="checkbox">
+                        <label><strong>Week 2:</strong> Business logic + validation rules</label>
+                    </div>
+                    <div class="checklist-item" onclick="toggleCheck(this)">
+                        <input type="checkbox">
+                        <label><strong>Week 3:</strong> User interface + integration</label>
+                    </div>
+                    <div class="checklist-item" onclick="toggleCheck(this)">
+                        <input type="checkbox">
+                        <label><strong>Week 4:</strong> Security + error handling</label>
+                    </div>
+                </div>
+
+                <h3>Enterprise Best Practices</h3>
+
+                <div class="info-box">
+                    <h4>Governance and Quality</h4>
+                    <ul>
+                        <li><strong>Code Reviews:</strong> AI-generated code still needs human review</li>
+                        <li><strong>Security Scanning:</strong> Run automated security checks on all generated code</li>
+                        <li><strong>Testing:</strong> AI can write tests, but verify they're comprehensive</li>
+                        <li><strong>Documentation:</strong> Keep AI conversation logs for knowledge transfer</li>
+                    </ul>
+                </div>
+
+                <div class="warning-box">
+                    <h4>Risk Management</h4>
+                    <ul>
+                        <li>Never expose sensitive data in AI prompts</li>
+                        <li>Review AI suggestions for licensing and IP concerns</li>
+                        <li>Maintain human oversight on architectural decisions</li>
+                        <li>Have fallback plans when AI suggestions aren't suitable</li>
+                    </ul>
+                </div>
+
+                <div class="navigation">
+                    <button class="secondary" onclick="previousSection()">← Previous</button>
+                    <button onclick="nextSection()">Next: Iteration →</button>
+                </div>
+            </div>
+
+            <!-- Section 5: Iteration -->
+            <div class="section" id="section-4">
+                <h2>🔄 Step 5: Iteration & Refinement</h2>
+
+                <h3>The Iterative Cycle</h3>
+                <p>Vibe coding is not a one-shot process. It's a continuous cycle of refinement between specifications, code, and testing.</p>
+
+                <div class="info-box">
+                    <h4>The Three-Step Iteration Loop</h4>
+                    <ol>
+                        <li><strong>Specification → Code:</strong> Start with clear user story, generate implementation</li>
+                        <li><strong>Code → Enhanced Specification:</strong> Discover gaps, update requirements</li>
+                        <li><strong>Testing → Refinement:</strong> Test against acceptance criteria, adjust both specs and code</li>
+                    </ol>
+                </div>
+
+                <h3>Track Your Iterations</h3>
+                <div class="button-group">
+                    <button onclick="addIteration()">➕ Log Iteration</button>
+                    <button class="secondary" onclick="clearIterations()">Clear Log</button>
+                </div>
+
+                <div class="iteration-log">
+                    <h4>Iteration History</h4>
+                    <div id="iterationLog">
+                        <p style="color: #666; font-style: italic;">No iterations logged yet. Click "Log Iteration" to start tracking your development cycle.</p>
+                    </div>
+                </div>
+
+                <h3>Continuous Alignment Questions</h3>
+                <ul>
+                    <li>Does the code still match business needs?</li>
+                    <li>What edge cases did we discover during implementation?</li>
+                    <li>Are there new requirements that emerged?</li>
+                    <li>What technical decisions were made and why?</li>
+                    <li>Are our acceptance criteria still valid?</li>
+                </ul>
+
+                <h3>Useful AI Prompts for Iteration</h3>
+                <div class="spec-template">
+                    <p><strong>"Here's my data model. Generate the database schema and API endpoints."</strong></p>
+                    <p><strong>"Based on this code, what test cases should I write?"</strong></p>
+                    <p><strong>"Review this implementation against the original spec. What's missing?"</strong></p>
+                    <p><strong>"What security vulnerabilities should I check for in this code?"</strong></p>
+                    <p><strong>"How can I optimize this code for better performance?"</strong></p>
+                </div>
+
+                <h3>Maintain Documentation</h3>
+                <div class="checklist">
+                    <div class="checklist-item" onclick="toggleCheck(this)">
+                        <input type="checkbox">
+                        <label>Document why specifications changed</label>
+                    </div>
+                    <div class="checklist-item" onclick="toggleCheck(this)">
+                        <input type="checkbox">
+                        <label>Track decisions made during coding</label>
+                    </div>
+                    <div class="checklist-item" onclick="toggleCheck(this)">
+                        <input type="checkbox">
+                        <label>Create audit trail for compliance</label>
+                    </div>
+                    <div class="checklist-item" onclick="toggleCheck(this)">
+                        <input type="checkbox">
+                        <label>Share effective prompts across teams</label>
+                    </div>
+                    <div class="checklist-item" onclick="toggleCheck(this)">
+                        <input type="checkbox">
+                        <label>Build internal libraries of reusable components</label>
+                    </div>
+                </div>
+
+                <div class="success-box">
+                    <h4>🚀 Getting Started Tomorrow</h4>
+                    <ol>
+                        <li>Pick one user story from your backlog</li>
+                        <li>Use AI to expand it into detailed specifications with acceptance criteria</li>
+                        <li>Have AI generate the basic structure - data models, APIs, and initial UI</li>
+                        <li>Test and iterate - what works? what's missing?</li>
+                        <li>Document learnings - build your team's vibe coding playbook</li>
+                    </ol>
+                </div>
+
+                <div class="tip">
+                    <strong>💡 Remember:</strong> The key to successful vibe coding in enterprise environments is treating AI as a collaborative partner that accelerates development, not a replacement for proper planning, specifications, and human judgment.
+                </div>
+
+                <div class="navigation">
+                    <button class="secondary" onclick="previousSection()">← Previous</button>
+                    <button onclick="resetApp()">🔄 Start Over</button>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p><strong>Vibe Coding Guide</strong> - AI-Assisted Enterprise Development</p>
+            <p style="font-size: 0.9em; margin-top: 10px;">Accelerate development while maintaining quality through proper specifications and iteration.</p>
+        </footer>
+    </div>
+
+    <script>
+        let currentSection = 0;
+        let iterations = [];
+        let generatedUserStory = null;
+        let generatedSpec = null;
+
+        // Sample user stories for the shuffle feature
+        const sampleUserStories = [
+            {
+                role: "Support Team Manager",
+                action: "collect and categorize customer feedback in a centralized system",
+                benefit: "we can identify trends and improve our products based on real user needs",
+                acceptanceCriteria: [
+                    "Feedback can be submitted via web form with category selection",
+                    "All feedback is stored with timestamp and customer information",
+                    "Feedback can be filtered by category, date range, and priority",
+                    "Support team can add notes and track resolution status",
+                    "Monthly summary reports can be generated automatically"
+                ],
+                technicalConsiderations: [
+                    "Secure authentication for support team access",
+                    "Data encryption for customer information",
+                    "Scalable database design for growing feedback volume",
+                    "API endpoints for potential mobile app integration"
+                ]
+            },
+            {
+                role: "Sales Representative",
+                action: "track customer interactions and follow-up tasks in one place",
+                benefit: "I never miss important follow-ups and can build stronger customer relationships",
+                acceptanceCriteria: [
+                    "Log calls, emails, and meetings with timestamps",
+                    "Set follow-up reminders with customizable notifications",
+                    "View complete customer interaction history",
+                    "Tag interactions by type and importance",
+                    "Integration with calendar for scheduled activities"
+                ],
+                technicalConsiderations: [
+                    "Real-time notifications via email and push",
+                    "Role-based access control for team vs. personal data",
+                    "Calendar API integration (Google, Outlook)",
+                    "Mobile-responsive design for field access"
+                ]
+            },
+            {
+                role: "Project Manager",
+                action: "visualize project progress and resource allocation across teams",
+                benefit: "I can identify bottlenecks early and make data-driven decisions",
+                acceptanceCriteria: [
+                    "Dashboard showing all active projects and their status",
+                    "Resource allocation view by team member",
+                    "Timeline visualization with dependencies",
+                    "Automated alerts for approaching deadlines",
+                    "Export reports in PDF and Excel formats"
+                ],
+                technicalConsiderations: [
+                    "Real-time data synchronization across teams",
+                    "Performance optimization for large datasets",
+                    "Customizable dashboard widgets",
+                    "Integration with existing project management tools"
+                ]
+            },
+            {
+                role: "HR Administrator",
+                action: "automate employee onboarding with document collection and task tracking",
+                benefit: "new hires have a smooth experience and compliance requirements are met",
+                acceptanceCriteria: [
+                    "Automated welcome emails with required documents checklist",
+                    "Digital signature capability for employment forms",
+                    "Progress tracking for each onboarding task",
+                    "Integration with IT for equipment provisioning",
+                    "Compliance reporting for audit purposes"
+                ],
+                technicalConsiderations: [
+                    "Secure document storage with encryption",
+                    "E-signature API integration",
+                    "GDPR and data privacy compliance",
+                    "SSO integration with corporate identity provider",
+                    "Workflow automation engine"
+                ]
+            },
+            {
+                role: "Finance Analyst",
+                action: "consolidate expense reports from multiple departments automatically",
+                benefit: "I can reduce manual data entry and produce accurate budget reports faster",
+                acceptanceCriteria: [
+                    "Import expense data from various sources (CSV, API, email)",
+                    "Automatic categorization using machine learning",
+                    "Duplicate detection and merging",
+                    "Approval workflow with multi-level authorization",
+                    "Real-time budget vs. actual comparison"
+                ],
+                technicalConsiderations: [
+                    "OCR for receipt scanning",
+                    "ML model for expense categorization",
+                    "Integration with accounting systems (QuickBooks, SAP)",
+                    "Audit trail for all transactions",
+                    "Currency conversion for international expenses"
+                ]
+            }
+        ];
+
+        function goToSection(index) {
+            if (index >= 0 && index < 5) {
+                const sections = document.querySelectorAll('.section');
+                const steps = document.querySelectorAll('.progress-step');
+
+                sections[currentSection].classList.remove('active');
+                steps[currentSection].classList.remove('active');
+
+                currentSection = index;
+
+                sections[currentSection].classList.add('active');
+                steps[currentSection].classList.add('active');
+
+                // Mark previous steps as completed
+                steps.forEach((step, i) => {
+                    if (i < currentSection) {
+                        step.classList.add('completed');
+                    } else if (i > currentSection) {
+                        step.classList.remove('completed');
+                    }
+                });
+
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function nextSection() {
+            if (currentSection < 4) {
+                goToSection(currentSection + 1);
+            }
+        }
+
+        function previousSection() {
+            if (currentSection > 0) {
+                goToSection(currentSection - 1);
+            }
+        }
+
+        function toggleCheck(element) {
+            const checkbox = element.querySelector('input[type="checkbox"]');
+            checkbox.checked = !checkbox.checked;
+        }
+
+        function generateUserStory() {
+            const randomStory = sampleUserStories[Math.floor(Math.random() * sampleUserStories.length)];
+            generatedUserStory = randomStory;
+
+            const output = document.getElementById('userStoryOutput');
+            const content = document.getElementById('userStoryContent');
+
+            content.innerHTML = `
+                <h4>User Story</h4>
+                <p style="font-size: 1.1em; margin-bottom: 20px;">
+                    <strong>As a</strong> ${randomStory.role}<br>
+                    <strong>I want to</strong> ${randomStory.action}<br>
+                    <strong>So that</strong> ${randomStory.benefit}
+                </p>
+
+                <h4 style="margin-top: 25px;">Acceptance Criteria</h4>
+                <ul style="margin-left: 20px;">
+                    ${randomStory.acceptanceCriteria.map(criteria => `<li>${criteria}</li>`).join('')}
+                </ul>
+
+                <h4 style="margin-top: 25px;">Technical Considerations</h4>
+                <ul style="margin-left: 20px;">
+                    ${randomStory.technicalConsiderations.map(tech => `<li>${tech}</li>`).join('')}
+                </ul>
+            `;
+
+            output.classList.add('visible');
+        }
+
+        function clearUserStory() {
+            const output = document.getElementById('userStoryOutput');
+            output.classList.remove('visible');
+            generatedUserStory = null;
+        }
+
+        function generateSpecification() {
+            if (!generatedUserStory) {
+                alert('Please generate a user story first!');
+                goToSection(1);
+                return;
+            }
+
+            const output = document.getElementById('specificationOutput');
+            const content = document.getElementById('specificationContent');
+
+            // Generate specification based on the user story
+            const spec = generateSpecFromStory(generatedUserStory);
+            generatedSpec = spec;
+
+            content.innerHTML = `
+                <h4>Technical Specification</h4>
+
+                <h5 style="color: #3b82f6; margin-top: 20px;">1. Scope</h5>
+                <p>${spec.scope}</p>
+
+                <h5 style="color: #3b82f6; margin-top: 20px;">2. Data Models</h5>
+                <pre style="background: #f1f5f9; padding: 15px; border-radius: 5px; overflow-x: auto;">${spec.dataModels}</pre>
+
+                <h5 style="color: #3b82f6; margin-top: 20px;">3. API Endpoints</h5>
+                <pre style="background: #f1f5f9; padding: 15px; border-radius: 5px; overflow-x: auto;">${spec.apiEndpoints}</pre>
+
+                <h5 style="color: #3b82f6; margin-top: 20px;">4. Business Rules</h5>
+                <ul style="margin-left: 20px;">
+                    ${spec.businessRules.map(rule => `<li>${rule}</li>`).join('')}
+                </ul>
+
+                <h5 style="color: #3b82f6; margin-top: 20px;">5. Security Requirements</h5>
+                <ul style="margin-left: 20px;">
+                    ${spec.securityRequirements.map(req => `<li>${req}</li>`).join('')}
+                </ul>
+
+                <h5 style="color: #3b82f6; margin-top: 20px;">6. Performance Criteria</h5>
+                <ul style="margin-left: 20px;">
+                    ${spec.performanceCriteria.map(criteria => `<li>${criteria}</li>`).join('')}
+                </ul>
+            `;
+
+            output.classList.add('visible');
+        }
+
+        function generateSpecFromStory(story) {
+            // This is a simplified spec generator
+            const specs = {
+                "Support Team Manager": {
+                    scope: "Build a customer feedback management system with categorization, tracking, and reporting capabilities. Focus on web-based interface with future mobile API support.",
+                    dataModels: `Feedback {
+  id: UUID
+  customerId: UUID
+  category: String (enum)
+  priority: String (enum)
+  description: Text
+  status: String (enum)
+  createdAt: Timestamp
+  resolvedAt: Timestamp
+  assignedTo: UUID
+}
+
+Customer {
+  id: UUID
+  name: String
+  email: String
+  company: String
+}
+
+Note {
+  id: UUID
+  feedbackId: UUID
+  userId: UUID
+  content: Text
+  createdAt: Timestamp
+}`,
+                    apiEndpoints: `POST   /api/feedback              Create new feedback
+GET    /api/feedback              List all feedback (paginated)
+GET    /api/feedback/:id          Get feedback details
+PUT    /api/feedback/:id          Update feedback
+DELETE /api/feedback/:id          Delete feedback
+POST   /api/feedback/:id/notes    Add note to feedback
+GET    /api/reports/monthly       Generate monthly summary`,
+                    businessRules: [
+                        "Feedback must have a category and priority before submission",
+                        "Only assigned team members can change feedback status",
+                        "Resolved feedback cannot be deleted, only archived",
+                        "Monthly reports aggregate by category and priority"
+                    ],
+                    securityRequirements: [
+                        "JWT-based authentication for all API endpoints",
+                        "Role-based access control (Admin, Support, Read-only)",
+                        "Encrypt customer PII at rest and in transit",
+                        "Audit logging for all data modifications"
+                    ],
+                    performanceCriteria: [
+                        "API response time < 200ms for 95th percentile",
+                        "Support 1000 concurrent users",
+                        "Handle 10,000 feedback items without degradation"
+                    ]
+                },
+                "Sales Representative": {
+                    scope: "Create a customer interaction tracking system with follow-up reminders and calendar integration.",
+                    dataModels: `Interaction {
+  id: UUID
+  customerId: UUID
+  type: String (call, email, meeting)
+  notes: Text
+  timestamp: Timestamp
+  tags: Array<String>
+  followUpDate: Timestamp
+  completed: Boolean
+}
+
+FollowUpTask {
+  id: UUID
+  interactionId: UUID
+  dueDate: Timestamp
+  reminderSent: Boolean
+  completed: Boolean
+}`,
+                    apiEndpoints: `POST   /api/interactions           Create interaction
+GET    /api/interactions           List interactions
+PUT    /api/interactions/:id       Update interaction
+POST   /api/followups              Create follow-up task
+GET    /api/followups/pending      Get pending tasks
+PUT    /api/followups/:id/complete Mark task complete`,
+                    businessRules: [
+                        "Follow-up tasks auto-created when followUpDate is set",
+                        "Reminders sent 24 hours before due date",
+                        "Interaction history sorted by timestamp descending",
+                        "Tags are case-insensitive and auto-suggest existing tags"
+                    ],
+                    securityRequirements: [
+                        "User can only access their own interactions unless manager role",
+                        "OAuth 2.0 for calendar integration",
+                        "End-to-end encryption for customer notes",
+                        "Session timeout after 30 minutes of inactivity"
+                    ],
+                    performanceCriteria: [
+                        "Calendar sync completes within 5 seconds",
+                        "Mobile app loads interaction list in < 1 second",
+                        "Push notifications delivered within 1 minute"
+                    ]
+                }
+            };
+
+            return specs[story.role] || {
+                scope: "Application scope based on user story requirements",
+                dataModels: "Entity models to be defined",
+                apiEndpoints: "API endpoints to be specified",
+                businessRules: ["Business rules to be detailed"],
+                securityRequirements: ["Security requirements to be specified"],
+                performanceCriteria: ["Performance criteria to be defined"]
+            };
+        }
+
+        function clearSpecification() {
+            const output = document.getElementById('specificationOutput');
+            output.classList.remove('visible');
+            generatedSpec = null;
+        }
+
+        function generateCode() {
+            if (!generatedSpec) {
+                alert('Please generate a specification first!');
+                goToSection(2);
+                return;
+            }
+
+            const output = document.getElementById('codeOutput');
+            const content = document.getElementById('codeContent');
+
+            content.innerHTML = `<pre>
+// Feedback Management System - Backend API (Node.js/Express)
+
+const express = require('express');
+const { authenticate, authorize } = require('./middleware/auth');
+const { validateFeedback } = require('./middleware/validation');
+const FeedbackService = require('./services/FeedbackService');
+
+const router = express.Router();
+const feedbackService = new FeedbackService();
+
+/**
+ * Create new feedback
+ * POST /api/feedback
+ */
+router.post('/feedback',
+  authenticate,
+  validateFeedback,
+  async (req, res) => {
+    try {
+      const feedback = await feedbackService.create({
+        customerId: req.user.id,
+        category: req.body.category,
+        priority: req.body.priority,
+        description: req.body.description,
+        status: 'open'
+      });
+
+      res.status(201).json({
+        success: true,
+        data: feedback
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+);
+
+/**
+ * List all feedback with filtering and pagination
+ * GET /api/feedback?category=bug&page=1&limit=20
+ */
+router.get('/feedback',
+  authenticate,
+  authorize(['admin', 'support']),
+  async (req, res) => {
+    try {
+      const { category, priority, status, page = 1, limit = 20 } = req.query;
+
+      const filters = {
+        ...(category && { category }),
+        ...(priority && { priority }),
+        ...(status && { status })
+      };
+
+      const result = await feedbackService.list(filters, {
+        page: parseInt(page),
+        limit: parseInt(limit)
+      });
+
+      res.json({
+        success: true,
+        data: result.items,
+        pagination: {
+          page: result.page,
+          limit: result.limit,
+          total: result.total,
+          pages: Math.ceil(result.total / result.limit)
+        }
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+);
+
+/**
+ * Update feedback status
+ * PUT /api/feedback/:id
+ */
+router.put('/feedback/:id',
+  authenticate,
+  authorize(['admin', 'support']),
+  async (req, res) => {
+    try {
+      const feedback = await feedbackService.update(
+        req.params.id,
+        req.body,
+        req.user.id
+      );
+
+      res.json({
+        success: true,
+        data: feedback
+      });
+    } catch (error) {
+      res.status(404).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+);
+
+/**
+ * Generate monthly summary report
+ * GET /api/reports/monthly?year=2025&month=10
+ */
+router.get('/reports/monthly',
+  authenticate,
+  authorize(['admin', 'manager']),
+  async (req, res) => {
+    try {
+      const { year, month } = req.query;
+      const report = await feedbackService.generateMonthlyReport(
+        parseInt(year),
+        parseInt(month)
+      );
+
+      res.json({
+        success: true,
+        data: report
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+);
+
+module.exports = router;
+
+// ============================================
+// Frontend Component (React)
+// ============================================
+
+import React, { useState, useEffect } from 'react';
+import { useAuth } from './hooks/useAuth';
+import { FeedbackAPI } from './services/api';
+
+export const FeedbackDashboard = () => {
+  const [feedbackList, setFeedbackList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState({
+    category: '',
+    priority: '',
+    status: ''
+  });
+  const { user } = useAuth();
+
+  useEffect(() => {
+    loadFeedback();
+  }, [filters]);
+
+  const loadFeedback = async () => {
+    try {
+      setLoading(true);
+      const response = await FeedbackAPI.list(filters);
+      setFeedbackList(response.data);
+    } catch (error) {
+      console.error('Error loading feedback:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStatusUpdate = async (id, newStatus) => {
+    try {
+      await FeedbackAPI.update(id, { status: newStatus });
+      loadFeedback(); // Reload list
+    } catch (error) {
+      console.error('Error updating feedback:', error);
+    }
+  };
+
+  return (
+    &lt;div className="feedback-dashboard"&gt;
+      &lt;h1&gt;Customer Feedback Management&lt;/h1&gt;
+
+      {/* Filters */}
+      &lt;div className="filters"&gt;
+        &lt;select
+          value={filters.category}
+          onChange={(e) => setFilters({...filters, category: e.target.value})}
+        &gt;
+          &lt;option value=""&gt;All Categories&lt;/option&gt;
+          &lt;option value="bug"&gt;Bug&lt;/option&gt;
+          &lt;option value="feature"&gt;Feature Request&lt;/option&gt;
+          &lt;option value="improvement"&gt;Improvement&lt;/option&gt;
+        &lt;/select&gt;
+      &lt;/div&gt;
+
+      {/* Feedback List */}
+      {loading ? (
+        &lt;div&gt;Loading...&lt;/div&gt;
+      ) : (
+        &lt;div className="feedback-list"&gt;
+          {feedbackList.map(feedback =&gt; (
+            &lt;FeedbackItem
+              key={feedback.id}
+              feedback={feedback}
+              onStatusUpdate={handleStatusUpdate}
+            /&gt;
+          ))}
+        &lt;/div&gt;
+      )}
+    &lt;/div&gt;
+  );
+};
+</pre>`;
+
+            output.classList.add('visible');
+        }
+
+        function clearCode() {
+            const output = document.getElementById('codeOutput');
+            output.classList.remove('visible');
+        }
+
+        function addIteration() {
+            const iterationType = ['Specification Update', 'Bug Fix', 'Feature Enhancement', 'Performance Optimization', 'Security Patch'][Math.floor(Math.random() * 5)];
+            const changes = [
+                'Added edge case handling for empty inputs',
+                'Updated API response format for consistency',
+                'Improved error messages for better UX',
+                'Optimized database query performance',
+                'Added input validation for security',
+                'Enhanced logging for debugging',
+                'Refactored code for better maintainability',
+                'Added unit tests for core functionality',
+                'Updated documentation with examples',
+                'Fixed race condition in async operations'
+            ];
+
+            const iteration = {
+                id: iterations.length + 1,
+                type: iterationType,
+                change: changes[Math.floor(Math.random() * changes.length)],
+                timestamp: new Date().toLocaleString()
+            };
+
+            iterations.push(iteration);
+            renderIterations();
+        }
+
+        function renderIterations() {
+            const log = document.getElementById('iterationLog');
+
+            if (iterations.length === 0) {
+                log.innerHTML = '<p style="color: #666; font-style: italic;">No iterations logged yet. Click "Log Iteration" to start tracking your development cycle.</p>';
+                return;
+            }
+
+            log.innerHTML = iterations.map(iteration => `
+                <div class="iteration-entry">
+                    <h5>Iteration #${iteration.id} - ${iteration.type}</h5>
+                    <p>${iteration.change}</p>
+                    <p style="color: #666; font-size: 0.9em; margin-top: 10px;">
+                        <strong>Timestamp:</strong> ${iteration.timestamp}
+                    </p>
+                    <span class="badge badge-${iteration.type.includes('Bug') ? 'updated' : iteration.type.includes('Specification') ? 'new' : 'completed'}">
+                        ${iteration.type}
+                    </span>
+                </div>
+            `).reverse().join('');
+        }
+
+        function clearIterations() {
+            if (confirm('Are you sure you want to clear all iteration logs?')) {
+                iterations = [];
+                renderIterations();
+            }
+        }
+
+        function resetApp() {
+            if (confirm('This will reset the entire app and clear all generated content. Continue?')) {
+                currentSection = 0;
+                iterations = [];
+                generatedUserStory = null;
+                generatedSpec = null;
+
+                // Clear all outputs
+                clearUserStory();
+                clearSpecification();
+                clearCode();
+                clearIterations();
+
+                // Reset all checkboxes
+                document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+
+                // Go to first section
+                goToSection(0);
+
+                alert('App has been reset!');
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            goToSection(0);
+        });
+    </script>
+</body>
+</html>
