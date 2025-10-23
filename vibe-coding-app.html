@@ -887,6 +887,11 @@
             content.innerHTML = `
                 <h4>Technical Specification</h4>
 
+                <div style="background: #e0e7ff; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #667eea;">
+                    <strong>Based on User Story:</strong><br>
+                    <em>"As a ${generatedUserStory.role}, I want to ${generatedUserStory.action}, so that ${generatedUserStory.benefit}"</em>
+                </div>
+
                 <h5 style="color: #3b82f6; margin-top: 20px;">1. Scope</h5>
                 <p>${spec.scope}</p>
 
@@ -1013,6 +1018,289 @@ PUT    /api/followups/:id/complete Mark task complete`,
                         "Calendar sync completes within 5 seconds",
                         "Mobile app loads interaction list in < 1 second",
                         "Push notifications delivered within 1 minute"
+                    ]
+                },
+                "Project Manager": {
+                    scope: "Build a comprehensive project management dashboard with real-time progress tracking, resource allocation views, timeline visualization, and automated reporting capabilities.",
+                    dataModels: `Project {
+  id: UUID
+  name: String
+  description: Text
+  status: String (enum: planning, active, on-hold, completed)
+  startDate: Date
+  endDate: Date
+  budget: Decimal
+  ownerId: UUID
+  createdAt: Timestamp
+  updatedAt: Timestamp
+}
+
+Task {
+  id: UUID
+  projectId: UUID
+  title: String
+  description: Text
+  status: String (enum: todo, in-progress, blocked, done)
+  priority: String (enum: low, medium, high, critical)
+  assignedTo: UUID
+  estimatedHours: Decimal
+  actualHours: Decimal
+  dueDate: Date
+  dependencies: Array<UUID>
+}
+
+Resource {
+  id: UUID
+  userId: UUID
+  projectId: UUID
+  role: String
+  allocation: Decimal (percentage)
+  startDate: Date
+  endDate: Date
+}
+
+Milestone {
+  id: UUID
+  projectId: UUID
+  title: String
+  targetDate: Date
+  achieved: Boolean
+  achievedDate: Date
+}`,
+                    apiEndpoints: `POST   /api/projects                      Create project
+GET    /api/projects                      List all projects
+GET    /api/projects/:id                  Get project details
+PUT    /api/projects/:id                  Update project
+GET    /api/projects/:id/tasks            Get project tasks
+POST   /api/tasks                         Create task
+PUT    /api/tasks/:id                     Update task status
+GET    /api/resources/allocation          Get team allocation
+GET    /api/dashboard/overview            Get dashboard data
+POST   /api/reports/export                Export report (PDF/Excel)
+GET    /api/alerts/deadlines              Get approaching deadlines`,
+                    businessRules: [
+                        "Task cannot be marked complete if it has incomplete dependencies",
+                        "Alert generated when task is 80% through timeline with status 'todo' or 'in-progress'",
+                        "Resource allocation cannot exceed 100% for any team member",
+                        "Project status auto-updates to 'completed' when all milestones achieved",
+                        "Dashboard refreshes every 5 minutes for real-time data",
+                        "Reports include data from selected date range with all project metrics"
+                    ],
+                    securityRequirements: [
+                        "Project Managers can view all projects, team members only assigned projects",
+                        "Role-based permissions: Admin, PM, Team Lead, Team Member",
+                        "API rate limiting: 100 requests per minute per user",
+                        "Audit trail for all project and task modifications",
+                        "Data export restricted to users with 'export' permission"
+                    ],
+                    performanceCriteria: [
+                        "Dashboard loads in < 2 seconds with up to 50 active projects",
+                        "API response time < 300ms for 95th percentile",
+                        "Support 500 concurrent users",
+                        "Real-time updates propagate to all users within 5 seconds",
+                        "Report generation completes within 10 seconds for 6-month data range"
+                    ]
+                },
+                "HR Administrator": {
+                    scope: "Develop an automated employee onboarding system with document management, task tracking, workflow automation, and compliance reporting.",
+                    dataModels: `Employee {
+  id: UUID
+  firstName: String
+  lastName: String
+  email: String
+  department: String
+  position: String
+  startDate: Date
+  managerId: UUID
+  status: String (enum: pending, active, inactive)
+  createdAt: Timestamp
+}
+
+OnboardingWorkflow {
+  id: UUID
+  employeeId: UUID
+  status: String (enum: not-started, in-progress, completed)
+  startedAt: Timestamp
+  completedAt: Timestamp
+  currentStep: Integer
+}
+
+OnboardingTask {
+  id: UUID
+  workflowId: UUID
+  title: String
+  description: Text
+  taskType: String (enum: document, form, training, equipment, it-setup)
+  assignedTo: String (enum: employee, hr, it, manager)
+  status: String (enum: pending, in-progress, completed)
+  dueDate: Date
+  completedDate: Date
+  order: Integer
+}
+
+Document {
+  id: UUID
+  employeeId: UUID
+  documentType: String
+  fileName: String
+  fileUrl: String
+  signatureRequired: Boolean
+  signedAt: Timestamp
+  signedBy: UUID
+  uploadedAt: Timestamp
+  expiresAt: Timestamp
+}
+
+ComplianceCheck {
+  id: UUID
+  employeeId: UUID
+  checkType: String
+  status: String (enum: pending, passed, failed)
+  checkedAt: Timestamp
+  checkedBy: UUID
+  notes: Text
+}`,
+                    apiEndpoints: `POST   /api/employees                     Create employee record
+GET    /api/employees/:id                 Get employee details
+POST   /api/onboarding/start              Start onboarding workflow
+GET    /api/onboarding/:id                Get workflow status
+PUT    /api/onboarding/:id/task/:taskId   Update task status
+POST   /api/documents/upload              Upload document
+POST   /api/documents/:id/sign            Sign document (e-signature)
+GET    /api/documents/:employeeId         Get employee documents
+POST   /api/notifications/welcome         Send welcome email
+GET    /api/compliance/report             Generate compliance report
+POST   /api/integrations/it/provision     Trigger IT provisioning`,
+                    businessRules: [
+                        "Welcome email sent automatically upon workflow creation",
+                        "Tasks are presented to employee in sequential order",
+                        "IT provisioning triggered when HR approves onboarding start",
+                        "Documents requiring signature must be completed before workflow can finish",
+                        "Compliance checks must pass for employee to become 'active'",
+                        "Manager receives notification when employee completes 50% and 100% of tasks",
+                        "Overdue tasks highlighted in red after due date passes"
+                    ],
+                    securityRequirements: [
+                        "Document storage uses AES-256 encryption at rest",
+                        "E-signature integration complies with ESIGN Act",
+                        "GDPR compliance: right to access, delete, and data portability",
+                        "SSO integration with corporate identity provider (SAML 2.0)",
+                        "Role-based access: HR Admin can view all, managers view their reports only",
+                        "All PII access logged for audit purposes",
+                        "Document retention policy: 7 years for tax/legal documents"
+                    ],
+                    performanceCriteria: [
+                        "Document upload completes within 30 seconds for files up to 10MB",
+                        "E-signature workflow responds in < 2 seconds",
+                        "Welcome email delivered within 5 minutes of workflow start",
+                        "Support 100 simultaneous onboarding workflows",
+                        "Compliance report generation < 15 seconds for 500 employees"
+                    ]
+                },
+                "Finance Analyst": {
+                    scope: "Create an intelligent expense consolidation and reporting system with automated categorization, approval workflows, and real-time budget tracking.",
+                    dataModels: `Expense {
+  id: UUID
+  employeeId: UUID
+  department: String
+  category: String
+  subcategory: String
+  amount: Decimal
+  currency: String
+  convertedAmount: Decimal (USD)
+  description: Text
+  expenseDate: Date
+  submittedDate: Date
+  status: String (enum: draft, submitted, approved, rejected, paid)
+  receiptUrl: String
+  merchantName: String
+  paymentMethod: String
+}
+
+ApprovalWorkflow {
+  id: UUID
+  expenseId: UUID
+  currentApprover: UUID
+  approvalLevel: Integer
+  status: String
+  approvedBy: Array<UUID>
+  rejectedBy: UUID
+  rejectionReason: Text
+  createdAt: Timestamp
+  completedAt: Timestamp
+}
+
+Budget {
+  id: UUID
+  department: String
+  category: String
+  fiscalYear: Integer
+  month: Integer
+  budgetAmount: Decimal
+  spentAmount: Decimal
+  remainingAmount: Decimal
+  lastUpdated: Timestamp
+}
+
+CategoryRule {
+  id: UUID
+  keywords: Array<String>
+  merchantPatterns: Array<String>
+  category: String
+  subcategory: String
+  confidence: Decimal
+}
+
+AuditTrail {
+  id: UUID
+  expenseId: UUID
+  action: String
+  performedBy: UUID
+  timestamp: Timestamp
+  changes: JSON
+  ipAddress: String
+}`,
+                    apiEndpoints: `POST   /api/expenses                      Create expense
+POST   /api/expenses/import               Import from CSV/email
+GET    /api/expenses                      List expenses (filtered)
+PUT    /api/expenses/:id                  Update expense
+POST   /api/expenses/:id/submit           Submit for approval
+POST   /api/expenses/:id/approve          Approve expense
+POST   /api/expenses/:id/reject           Reject expense
+POST   /api/receipts/upload               Upload receipt image
+POST   /api/receipts/ocr                  Extract data from receipt (OCR)
+GET    /api/categories/suggest            ML-based category suggestion
+GET    /api/budgets/vs-actual             Budget vs actual comparison
+POST   /api/reports/generate              Generate financial report
+GET    /api/duplicates/detect             Find duplicate expenses
+POST   /api/integrations/accounting/sync  Sync with QuickBooks/SAP`,
+                    businessRules: [
+                        "Expenses under $50 auto-approved if employee is manager level",
+                        "Expenses over $500 require two-level approval (manager + finance)",
+                        "Duplicate detection: same amount, merchant, and date within 48 hours",
+                        "OCR extraction auto-fills expense fields, user can override",
+                        "ML categorization improves with each manual correction (feedback loop)",
+                        "Currency conversion uses exchange rate from expense date",
+                        "Budget alerts sent when department reaches 80% and 95% of monthly budget",
+                        "Expenses must be submitted within 90 days of expense date"
+                    ],
+                    securityRequirements: [
+                        "PCI DSS compliance for payment method storage",
+                        "Receipt images stored in encrypted S3 buckets",
+                        "Multi-factor authentication required for approval actions over $1000",
+                        "Segregation of duties: employees cannot approve their own expenses",
+                        "Complete audit trail of all expense modifications",
+                        "API authentication via OAuth 2.0",
+                        "Integration with accounting systems uses encrypted API keys in vault"
+                    ],
+                    performanceCriteria: [
+                        "OCR processing completes within 10 seconds for receipt images",
+                        "ML categorization responds in < 500ms",
+                        "Duplicate detection runs in < 3 seconds for 10,000 expenses",
+                        "Budget vs actual report generates in < 5 seconds",
+                        "Support 50 concurrent CSV imports (up to 1000 rows each)",
+                        "Real-time budget updates reflected within 2 seconds of expense approval",
+                        "Accounting system sync completes within 1 minute for 500 expenses"
                     ]
                 }
             };
