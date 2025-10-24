@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heisenberg Knowledge Graph</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #fff;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border-bottom: 2px solid #0a8f08;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            color: #0a8f08;
+            text-shadow: 0 0 10px rgba(10, 143, 8, 0.5);
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #aaa;
+            font-size: 1.1em;
+        }
+
+        .graph-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .node circle {
+            stroke: #fff;
+            stroke-width: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .node:hover circle {
+            stroke-width: 4px;
+            filter: brightness(1.3);
+        }
+
+        .node text {
+            font-size: 12px;
+            font-weight: bold;
+            text-anchor: middle;
+            pointer-events: none;
+            text-shadow:
+                -1px -1px 0 #000,
+                1px -1px 0 #000,
+                -1px 1px 0 #000,
+                1px 1px 0 #000;
+        }
+
+        .link {
+            stroke: #666;
+            stroke-opacity: 0.6;
+            stroke-width: 2px;
+            fill: none;
+        }
+
+        .link-label {
+            font-size: 10px;
+            fill: #bbb;
+            text-anchor: middle;
+            pointer-events: none;
+            text-shadow:
+                -1px -1px 2px #000,
+                1px -1px 2px #000,
+                -1px 1px 2px #000,
+                1px 1px 2px #000;
+        }
+
+        .info-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            border: 2px solid #0a8f08;
+            border-radius: 10px;
+            padding: 20px;
+            max-width: 350px;
+            display: none;
+            box-shadow: 0 0 20px rgba(10, 143, 8, 0.3);
+        }
+
+        .info-panel.active {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .info-panel h3 {
+            color: #0a8f08;
+            margin-bottom: 10px;
+            font-size: 1.5em;
+        }
+
+        .info-panel .category {
+            display: inline-block;
+            padding: 3px 10px;
+            background: rgba(10, 143, 8, 0.3);
+            border-radius: 5px;
+            font-size: 0.85em;
+            margin-bottom: 10px;
+        }
+
+        .info-panel p {
+            line-height: 1.6;
+            color: #ddd;
+            margin-bottom: 10px;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 5px;
+            line-height: 1;
+        }
+
+        .close-btn:hover {
+            color: #0a8f08;
+        }
+
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            border: 2px solid #0a8f08;
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .controls button {
+            background: #0a8f08;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .controls button:hover {
+            background: #0cb80a;
+            box-shadow: 0 0 10px rgba(10, 143, 8, 0.5);
+        }
+
+        .legend {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            border: 2px solid #0a8f08;
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+            border: 2px solid #fff;
+        }
+
+        .legend-label {
+            font-size: 12px;
+            color: #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>HEISENBERG</h1>
+            <div class="subtitle">Knowledge Graph - The Methamphetamine Empire</div>
+        </div>
+
+        <div class="graph-container">
+            <svg id="graph"></svg>
+
+            <div class="legend">
+                <h3 style="color: #0a8f08; margin-bottom: 10px; font-size: 1.2em;">Legend</h3>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #0a8f08;"></div>
+                    <div class="legend-label">Main Character</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ff4444;"></div>
+                    <div class="legend-label">Associates</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #4477ff;"></div>
+                    <div class="legend-label">Family</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ffaa00;"></div>
+                    <div class="legend-label">Law Enforcement</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #aa44ff;"></div>
+                    <div class="legend-label">Business/Products</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #44ffff;"></div>
+                    <div class="legend-label">Locations</div>
+                </div>
+            </div>
+
+            <div class="info-panel" id="infoPanel">
+                <button class="close-btn" onclick="closeInfo()">&times;</button>
+                <div id="infoContent"></div>
+            </div>
+
+            <div class="controls">
+                <button onclick="resetZoom()">Reset View</button>
+                <button onclick="togglePhysics()">Toggle Physics</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Knowledge graph data
+        const graphData = {
+            nodes: [
+                // Main character
+                { id: 'heisenberg', label: 'Heisenberg', category: 'main', description: 'Walter White\'s alter ego and criminal persona. A high school chemistry teacher turned methamphetamine manufacturer, creating the purest blue meth in the market.' },
+
+                // Associates
+                { id: 'jesse', label: 'Jesse Pinkman', category: 'associate', description: 'Former student and cooking partner. Started as a small-time meth cook, became Heisenberg\'s protégé and moral compass.' },
+                { id: 'saul', label: 'Saul Goodman', category: 'associate', description: 'Criminal lawyer who helps Heisenberg navigate the legal and criminal underworld. "Better Call Saul!"' },
+                { id: 'mike', label: 'Mike Ehrmantraut', category: 'associate', description: 'Former police officer, now a fixer and enforcer. Provides security and cleanup services for the operation.' },
+                { id: 'gus', label: 'Gus Fring', category: 'associate', description: 'Owner of Los Pollos Hermanos and major drug distributor. Heisenberg\'s employer and later, nemesis.' },
+                { id: 'lydia', label: 'Lydia Rodarte-Quayle', category: 'associate', description: 'Madrigal Electromotive executive who supplies methylamine and manages international distribution.' },
+                { id: 'todd', label: 'Todd Alquist', category: 'associate', description: 'Apprentice cook working for Heisenberg. Loyal but psychopathic member of the operation.' },
+
+                // Family
+                { id: 'skyler', label: 'Skyler White', category: 'family', description: 'Wife who eventually becomes complicit in money laundering through the car wash business.' },
+                { id: 'walter-jr', label: 'Walter Jr.', category: 'family', description: 'Son, kept in the dark about his father\'s criminal activities. Known for his love of breakfast.' },
+                { id: 'holly', label: 'Holly White', category: 'family', description: 'Infant daughter, representing the innocent family life Walter is destroying.' },
+                { id: 'hank', label: 'Hank Schrader', category: 'law', description: 'DEA agent and brother-in-law. Obsessively hunting Heisenberg, unaware of his true identity.' },
+                { id: 'marie', label: 'Marie Schrader', category: 'family', description: 'Sister-in-law and Hank\'s wife. Works as a radiologic technologist.' },
+
+                // Business/Products
+                { id: 'blue-meth', label: 'Blue Meth', category: 'business', description: 'Signature 99.1% pure methamphetamine with distinctive blue color. The product that built the empire.' },
+                { id: 'rv-lab', label: 'RV Lab', category: 'location', description: 'Mobile methamphetamine laboratory. First production facility for the operation.' },
+                { id: 'superlab', label: 'Superlab', category: 'location', description: 'State-of-the-art underground laboratory beneath the laundry facility. Gus Fring\'s operation.' },
+                { id: 'los-pollos', label: 'Los Pollos Hermanos', category: 'business', description: 'Fast food chain used as front for drug distribution network.' },
+                { id: 'car-wash', label: 'A1A Car Wash', category: 'business', description: 'Money laundering front purchased and operated by the Whites.' },
+
+                // Law Enforcement
+                { id: 'dea', label: 'DEA', category: 'law', description: 'Drug Enforcement Administration actively pursuing Heisenberg and his operation.' },
+                { id: 'gomez', label: 'Steven Gomez', category: 'law', description: 'DEA agent and Hank\'s partner in the investigation.' },
+
+                // Other locations
+                { id: 'abq', label: 'Albuquerque', category: 'location', description: 'Base of operations for the methamphetamine empire.' },
+            ],
+            links: [
+                // Heisenberg connections
+                { source: 'heisenberg', target: 'jesse', label: 'partner', strength: 'strong' },
+                { source: 'heisenberg', target: 'saul', label: 'lawyer', strength: 'medium' },
+                { source: 'heisenberg', target: 'mike', label: 'security', strength: 'medium' },
+                { source: 'heisenberg', target: 'gus', label: 'employer/enemy', strength: 'strong' },
+                { source: 'heisenberg', target: 'lydia', label: 'supplier', strength: 'medium' },
+                { source: 'heisenberg', target: 'todd', label: 'apprentice', strength: 'medium' },
+                { source: 'heisenberg', target: 'skyler', label: 'wife', strength: 'strong' },
+                { source: 'heisenberg', target: 'walter-jr', label: 'son', strength: 'strong' },
+                { source: 'heisenberg', target: 'holly', label: 'daughter', strength: 'strong' },
+                { source: 'heisenberg', target: 'hank', label: 'brother-in-law/hunter', strength: 'strong' },
+                { source: 'heisenberg', target: 'blue-meth', label: 'manufactures', strength: 'strong' },
+
+                // Jesse connections
+                { source: 'jesse', target: 'rv-lab', label: 'works at', strength: 'medium' },
+                { source: 'jesse', target: 'superlab', label: 'works at', strength: 'medium' },
+                { source: 'jesse', target: 'mike', label: 'colleague', strength: 'medium' },
+
+                // Family connections
+                { source: 'skyler', target: 'walter-jr', label: 'mother', strength: 'strong' },
+                { source: 'skyler', target: 'holly', label: 'mother', strength: 'strong' },
+                { source: 'skyler', target: 'marie', label: 'sister', strength: 'strong' },
+                { source: 'skyler', target: 'car-wash', label: 'operates', strength: 'medium' },
+                { source: 'hank', target: 'marie', label: 'husband', strength: 'strong' },
+
+                // Law enforcement
+                { source: 'hank', target: 'dea', label: 'works for', strength: 'strong' },
+                { source: 'gomez', target: 'dea', label: 'works for', strength: 'strong' },
+                { source: 'hank', target: 'gomez', label: 'partner', strength: 'strong' },
+                { source: 'dea', target: 'heisenberg', label: 'hunting', strength: 'strong' },
+
+                // Business connections
+                { source: 'gus', target: 'los-pollos', label: 'owns', strength: 'strong' },
+                { source: 'gus', target: 'superlab', label: 'owns', strength: 'strong' },
+                { source: 'gus', target: 'mike', label: 'employs', strength: 'strong' },
+                { source: 'lydia', target: 'blue-meth', label: 'distributes', strength: 'medium' },
+                { source: 'todd', target: 'lydia', label: 'works with', strength: 'medium' },
+
+                // Locations
+                { source: 'superlab', target: 'blue-meth', label: 'produces', strength: 'strong' },
+                { source: 'rv-lab', target: 'blue-meth', label: 'produces', strength: 'medium' },
+                { source: 'los-pollos', target: 'abq', label: 'located in', strength: 'weak' },
+                { source: 'heisenberg', target: 'abq', label: 'operates in', strength: 'medium' },
+            ]
+        };
+
+        // Color scheme based on category
+        const colorMap = {
+            main: '#0a8f08',
+            associate: '#ff4444',
+            family: '#4477ff',
+            law: '#ffaa00',
+            business: '#aa44ff',
+            location: '#44ffff'
+        };
+
+        // Set up SVG
+        const svg = d3.select('#graph');
+        const width = window.innerWidth;
+        const height = window.innerHeight - 100;
+
+        svg.attr('width', width).attr('height', height);
+
+        // Create container for zoom
+        const g = svg.append('g');
+
+        // Set up zoom behavior
+        const zoom = d3.zoom()
+            .scaleExtent([0.1, 4])
+            .on('zoom', (event) => {
+                g.attr('transform', event.transform);
+            });
+
+        svg.call(zoom);
+
+        // Create force simulation
+        let simulationRunning = true;
+        const simulation = d3.forceSimulation(graphData.nodes)
+            .force('link', d3.forceLink(graphData.links).id(d => d.id).distance(150))
+            .force('charge', d3.forceManyBody().strength(-500))
+            .force('center', d3.forceCenter(width / 2, height / 2))
+            .force('collision', d3.forceCollide().radius(40));
+
+        // Create links
+        const link = g.append('g')
+            .selectAll('path')
+            .data(graphData.links)
+            .enter()
+            .append('path')
+            .attr('class', 'link')
+            .attr('stroke-width', d => d.strength === 'strong' ? 3 : d.strength === 'medium' ? 2 : 1);
+
+        // Create link labels
+        const linkLabel = g.append('g')
+            .selectAll('text')
+            .data(graphData.links)
+            .enter()
+            .append('text')
+            .attr('class', 'link-label')
+            .text(d => d.label);
+
+        // Create nodes
+        const node = g.append('g')
+            .selectAll('g')
+            .data(graphData.nodes)
+            .enter()
+            .append('g')
+            .attr('class', 'node')
+            .call(d3.drag()
+                .on('start', dragStarted)
+                .on('drag', dragged)
+                .on('end', dragEnded));
+
+        // Add circles to nodes
+        node.append('circle')
+            .attr('r', d => d.category === 'main' ? 30 : 20)
+            .attr('fill', d => colorMap[d.category]);
+
+        // Add labels to nodes
+        node.append('text')
+            .attr('dy', d => d.category === 'main' ? 45 : 35)
+            .text(d => d.label)
+            .style('fill', '#fff');
+
+        // Add click event to show info
+        node.on('click', (event, d) => {
+            event.stopPropagation();
+            showInfo(d);
+        });
+
+        // Close info panel when clicking on SVG
+        svg.on('click', () => {
+            closeInfo();
+        });
+
+        // Update positions on simulation tick
+        simulation.on('tick', () => {
+            link.attr('d', d => {
+                const dx = d.target.x - d.source.x;
+                const dy = d.target.y - d.source.y;
+                return `M${d.source.x},${d.source.y} L${d.target.x},${d.target.y}`;
+            });
+
+            linkLabel
+                .attr('x', d => (d.source.x + d.target.x) / 2)
+                .attr('y', d => (d.source.y + d.target.y) / 2);
+
+            node.attr('transform', d => `translate(${d.x},${d.y})`);
+        });
+
+        // Drag functions
+        function dragStarted(event, d) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+
+        function dragged(event, d) {
+            d.fx = event.x;
+            d.fy = event.y;
+        }
+
+        function dragEnded(event, d) {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = null;
+            d.fy = null;
+        }
+
+        // Show info panel
+        function showInfo(node) {
+            const panel = document.getElementById('infoPanel');
+            const content = document.getElementById('infoContent');
+
+            content.innerHTML = `
+                <h3>${node.label}</h3>
+                <div class="category">${node.category.toUpperCase()}</div>
+                <p>${node.description}</p>
+            `;
+
+            panel.classList.add('active');
+        }
+
+        // Close info panel
+        function closeInfo() {
+            document.getElementById('infoPanel').classList.remove('active');
+        }
+
+        // Reset zoom
+        function resetZoom() {
+            svg.transition()
+                .duration(750)
+                .call(zoom.transform, d3.zoomIdentity);
+        }
+
+        // Toggle physics
+        function togglePhysics() {
+            if (simulationRunning) {
+                simulation.stop();
+                simulationRunning = false;
+            } else {
+                simulation.restart();
+                simulationRunning = true;
+            }
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            const newWidth = window.innerWidth;
+            const newHeight = window.innerHeight - 100;
+            svg.attr('width', newWidth).attr('height', newHeight);
+            simulation.force('center', d3.forceCenter(newWidth / 2, newHeight / 2));
+            simulation.alpha(0.3).restart();
+        });
+    </script>
+</body>
+</html>
