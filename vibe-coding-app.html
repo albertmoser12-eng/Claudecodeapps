@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vibe Coding Guide - Enterprise AI-Assisted Development</title>
     <style>
+        :root {
+            --zurich-blue: #2167AE;      /* Primary - Headers & metrics */
+            --zurich-white: #ECEEEF;     /* Backgrounds & contrast */
+            --cerulean: #0A8AD2;         /* Stats & borders */
+            --endeavour: #0060AE;        /* Footer & gradients */
+            --san-marino: #4066B3;       /* Badges & labels */
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -13,7 +21,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--zurich-blue) 0%, var(--endeavour) 100%);
             min-height: 100vh;
             padding: 20px;
         }
@@ -28,7 +36,7 @@
         }
 
         header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--zurich-blue) 0%, var(--endeavour) 100%);
             color: white;
             padding: 40px;
             text-align: center;
@@ -76,12 +84,12 @@
         }
 
         .progress-step.active::before {
-            background: #667eea;
+            background: var(--zurich-blue);
             transform: scale(1.2);
         }
 
         .progress-step.completed::before {
-            background: #10b981;
+            background: var(--cerulean);
             content: "✓";
         }
 
@@ -92,7 +100,7 @@
         }
 
         .progress-step.active span {
-            color: #667eea;
+            color: var(--zurich-blue);
             font-weight: bold;
         }
 
@@ -115,15 +123,15 @@
         }
 
         h2 {
-            color: #667eea;
+            color: var(--zurich-blue);
             font-size: 2em;
             margin-bottom: 20px;
-            border-bottom: 3px solid #667eea;
+            border-bottom: 3px solid var(--zurich-blue);
             padding-bottom: 10px;
         }
 
         h3 {
-            color: #764ba2;
+            color: var(--san-marino);
             margin-top: 25px;
             margin-bottom: 15px;
             font-size: 1.3em;
@@ -141,8 +149,8 @@
         }
 
         .info-box {
-            background: #e0e7ff;
-            border-left: 4px solid #667eea;
+            background: var(--zurich-white);
+            border-left: 4px solid var(--zurich-blue);
             padding: 20px;
             margin: 20px 0;
             border-radius: 5px;
@@ -158,7 +166,7 @@
 
         .success-box {
             background: #d1fae5;
-            border-left: 4px solid #10b981;
+            border-left: 4px solid var(--cerulean);
             padding: 20px;
             margin: 20px 0;
             border-radius: 5px;
@@ -172,7 +180,7 @@
         }
 
         button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--zurich-blue) 0%, var(--endeavour) 100%);
             color: white;
             border: none;
             padding: 15px 30px;
@@ -181,12 +189,12 @@
             cursor: pointer;
             transition: all 0.3s;
             font-weight: bold;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 4px 15px rgba(33, 103, 174, 0.4);
         }
 
         button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+            box-shadow: 0 6px 20px rgba(33, 103, 174, 0.6);
         }
 
         button:active {
@@ -223,7 +231,7 @@
         }
 
         .output-area h4 {
-            color: #667eea;
+            color: var(--zurich-blue);
             margin-bottom: 15px;
             font-size: 1.2em;
         }
@@ -232,7 +240,7 @@
             background: white;
             padding: 20px;
             border-radius: 8px;
-            border-left: 4px solid #10b981;
+            border-left: 4px solid var(--cerulean);
             margin-top: 10px;
         }
 
@@ -240,7 +248,7 @@
             background: white;
             padding: 20px;
             border-radius: 8px;
-            border-left: 4px solid #3b82f6;
+            border-left: 4px solid var(--san-marino);
             margin-top: 10px;
         }
 
@@ -287,7 +295,7 @@
         }
 
         .checklist-item:hover {
-            background: #e0e7ff;
+            background: var(--zurich-white);
         }
 
         .checklist-item input[type="checkbox"] {
@@ -308,12 +316,12 @@
             background: white;
             padding: 15px;
             margin: 10px 0;
-            border-left: 4px solid #667eea;
+            border-left: 4px solid var(--zurich-blue);
             border-radius: 5px;
         }
 
         .iteration-entry h5 {
-            color: #667eea;
+            color: var(--zurich-blue);
             margin-bottom: 10px;
         }
 
@@ -326,7 +334,7 @@
             margin: 5px 5px 5px 0;
         }
 
-        .badge-new { background: #dbeafe; color: #1e40af; }
+        .badge-new { background: var(--zurich-white); color: var(--endeavour); }
         .badge-updated { background: #fef3c7; color: #92400e; }
         .badge-completed { background: #d1fae5; color: #065f46; }
 
@@ -1108,31 +1116,31 @@
             content.innerHTML = `
                 <h4>Technical Specification</h4>
 
-                <div style="background: #e0e7ff; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #667eea;">
+                <div style="background: var(--zurich-white); padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid var(--zurich-blue);">
                     <strong>Based on User Story:</strong><br>
                     <em>"As a ${generatedUserStory.role}, I want to ${generatedUserStory.action}, so that ${generatedUserStory.benefit}"</em>
                 </div>
 
-                <h5 style="color: #3b82f6; margin-top: 20px;">1. Scope</h5>
+                <h5 style="color: var(--san-marino); margin-top: 20px;">1. Scope</h5>
                 <p>${spec.scope}</p>
 
-                <h5 style="color: #3b82f6; margin-top: 20px;">2. Data Models</h5>
+                <h5 style="color: var(--san-marino); margin-top: 20px;">2. Data Models</h5>
                 <pre style="background: #f1f5f9; padding: 15px; border-radius: 5px; overflow-x: auto;">${spec.dataModels}</pre>
 
-                <h5 style="color: #3b82f6; margin-top: 20px;">3. API Endpoints</h5>
+                <h5 style="color: var(--san-marino); margin-top: 20px;">3. API Endpoints</h5>
                 <pre style="background: #f1f5f9; padding: 15px; border-radius: 5px; overflow-x: auto;">${spec.apiEndpoints}</pre>
 
-                <h5 style="color: #3b82f6; margin-top: 20px;">4. Business Rules</h5>
+                <h5 style="color: var(--san-marino); margin-top: 20px;">4. Business Rules</h5>
                 <ul style="margin-left: 20px;">
                     ${spec.businessRules.map(rule => `<li>${rule}</li>`).join('')}
                 </ul>
 
-                <h5 style="color: #3b82f6; margin-top: 20px;">5. Security Requirements</h5>
+                <h5 style="color: var(--san-marino); margin-top: 20px;">5. Security Requirements</h5>
                 <ul style="margin-left: 20px;">
                     ${spec.securityRequirements.map(req => `<li>${req}</li>`).join('')}
                 </ul>
 
-                <h5 style="color: #3b82f6; margin-top: 20px;">6. Performance Criteria</h5>
+                <h5 style="color: var(--san-marino); margin-top: 20px;">6. Performance Criteria</h5>
                 <ul style="margin-left: 20px;">
                     ${spec.performanceCriteria.map(criteria => `<li>${criteria}</li>`).join('')}
                 </ul>
