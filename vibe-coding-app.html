@@ -448,6 +448,72 @@
                     <p><strong>Vibe:</strong> Clean, professional, data-driven yet human. Think "Airtable meets Zendesk" – powerful but approachable.</p>
                 </div>
 
+                <h3>Select Your Project Type</h3>
+                <p>Choose an industry use case or create your own custom project:</p>
+
+                <div class="checklist">
+                    <div class="checklist-item" onclick="selectUseCase(this, 'claims-processing')">
+                        <input type="radio" name="usecase" value="claims-processing">
+                        <label><strong>Claims Processing Automation</strong> - Streamline claims intake, assessment, and approval workflows</label>
+                    </div>
+                    <div class="checklist-item" onclick="selectUseCase(this, 'underwriting')">
+                        <input type="radio" name="usecase" value="underwriting">
+                        <label><strong>Underwriting Decision Support</strong> - Risk assessment and policy pricing optimization</label>
+                    </div>
+                    <div class="checklist-item" onclick="selectUseCase(this, 'policy-management')">
+                        <input type="radio" name="usecase" value="policy-management">
+                        <label><strong>Policy Management System</strong> - Policy lifecycle management from quote to renewal</label>
+                    </div>
+                    <div class="checklist-item" onclick="selectUseCase(this, 'fraud-detection')">
+                        <input type="radio" name="usecase" value="fraud-detection">
+                        <label><strong>Fraud Detection & Prevention</strong> - AI-powered anomaly detection and investigation tools</label>
+                    </div>
+                    <div class="checklist-item" onclick="selectUseCase(this, 'customer-portal')">
+                        <input type="radio" name="usecase" value="customer-portal">
+                        <label><strong>Customer Self-Service Portal</strong> - Digital experience for policyholders</label>
+                    </div>
+                    <div class="checklist-item" onclick="selectUseCase(this, 'agent-crm')">
+                        <input type="radio" name="usecase" value="agent-crm">
+                        <label><strong>Agent CRM & Commission Tracking</strong> - Sales management and compensation system</label>
+                    </div>
+                    <div class="checklist-item" onclick="selectUseCase(this, 'custom-project')">
+                        <input type="radio" name="usecase" value="custom-project">
+                        <label><strong>Create My Own Project</strong> - Define your own custom application</label>
+                    </div>
+                </div>
+
+                <div id="customProjectInput" style="display: none; margin: 20px 0;">
+                    <div style="background: #f9fafb; padding: 20px; border-radius: 8px; border-left: 4px solid var(--zurich-blue);">
+                        <label for="customProjectName" style="display: block; margin-bottom: 10px; font-weight: bold; color: var(--zurich-blue);">
+                            Project Name:
+                        </label>
+                        <input
+                            type="text"
+                            id="customProjectName"
+                            placeholder="e.g., Employee Wellness Platform, Inventory Management System, etc."
+                            style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 5px; font-size: 1em; margin-bottom: 15px;"
+                            onchange="updateCustomProject('name', this.value)"
+                        />
+                        <label for="customProjectDescription" style="display: block; margin-bottom: 10px; font-weight: bold; color: var(--zurich-blue);">
+                            Brief Description:
+                        </label>
+                        <textarea
+                            id="customProjectDescription"
+                            placeholder="Describe what your app will do and who it's for..."
+                            style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 5px; font-size: 1em; min-height: 100px;"
+                            onchange="updateCustomProject('description', this.value)"
+                        ></textarea>
+                        <small style="color: #666; margin-top: 8px; display: block;">
+                            This information will be used to generate tailored user stories and specifications throughout the guide.
+                        </small>
+                    </div>
+                </div>
+
+                <div class="success-box" id="useCaseSelected" style="display: none;">
+                    <strong>✓ Project Selected:</strong> <span id="selectedUseCaseText"></span>
+                    <br><small>The guide will be customized for your selected project.</small>
+                </div>
+
                 <div class="navigation">
                     <button class="secondary" disabled>← Previous</button>
                     <button onclick="nextSection()">Next: System Modules →</button>
@@ -596,43 +662,8 @@
                     <strong>⚠️ Important:</strong> This foundation prevents costly rewrites and ensures AI generates code that fits your actual needs. Don't skip this step!
                 </div>
 
-                <h3>Select Your Industry Use Case</h3>
-                <p>Choose an insurance sector use case to guide your user story generation:</p>
-
-                <div class="checklist">
-                    <div class="checklist-item" onclick="selectUseCase(this, 'claims-processing')">
-                        <input type="radio" name="usecase" value="claims-processing">
-                        <label><strong>Claims Processing Automation</strong> - Streamline claims intake, assessment, and approval workflows</label>
-                    </div>
-                    <div class="checklist-item" onclick="selectUseCase(this, 'underwriting')">
-                        <input type="radio" name="usecase" value="underwriting">
-                        <label><strong>Underwriting Decision Support</strong> - Risk assessment and policy pricing optimization</label>
-                    </div>
-                    <div class="checklist-item" onclick="selectUseCase(this, 'policy-management')">
-                        <input type="radio" name="usecase" value="policy-management">
-                        <label><strong>Policy Management System</strong> - Policy lifecycle management from quote to renewal</label>
-                    </div>
-                    <div class="checklist-item" onclick="selectUseCase(this, 'fraud-detection')">
-                        <input type="radio" name="usecase" value="fraud-detection">
-                        <label><strong>Fraud Detection & Prevention</strong> - AI-powered anomaly detection and investigation tools</label>
-                    </div>
-                    <div class="checklist-item" onclick="selectUseCase(this, 'customer-portal')">
-                        <input type="radio" name="usecase" value="customer-portal">
-                        <label><strong>Customer Self-Service Portal</strong> - Digital experience for policyholders</label>
-                    </div>
-                    <div class="checklist-item" onclick="selectUseCase(this, 'agent-crm')">
-                        <input type="radio" name="usecase" value="agent-crm">
-                        <label><strong>Agent CRM & Commission Tracking</strong> - Sales management and compensation system</label>
-                    </div>
-                </div>
-
-                <div class="success-box" id="useCaseSelected" style="display: none;">
-                    <strong>✓ Use Case Selected:</strong> <span id="selectedUseCaseText"></span>
-                    <br><small>Your user stories in Step 2 will be tailored to this use case.</small>
-                </div>
-
                 <div class="navigation">
-                    <button class="secondary" disabled>← Previous</button>
+                    <button class="secondary" onclick="previousSection()">← Previous</button>
                     <button onclick="nextSection()">Next: User Stories →</button>
                 </div>
             </div>
@@ -894,6 +925,8 @@
         let generatedUserStory = null;
         let generatedSpec = null;
         let selectedUseCase = null;
+        let customProjectName = '';
+        let customProjectDescription = '';
 
         // Sample user stories for the shuffle feature
         const sampleUserStories = [
@@ -1186,6 +1219,14 @@
             // Store selected use case
             selectedUseCase = useCase;
 
+            // Show/hide custom project input
+            const customInput = document.getElementById('customProjectInput');
+            if (useCase === 'custom-project') {
+                customInput.style.display = 'block';
+            } else {
+                customInput.style.display = 'none';
+            }
+
             // Show success message
             const successBox = document.getElementById('useCaseSelected');
             const useCaseText = document.getElementById('selectedUseCaseText');
@@ -1196,29 +1237,77 @@
                 'policy-management': 'Policy Management System',
                 'fraud-detection': 'Fraud Detection & Prevention',
                 'customer-portal': 'Customer Self-Service Portal',
-                'agent-crm': 'Agent CRM & Commission Tracking'
+                'agent-crm': 'Agent CRM & Commission Tracking',
+                'custom-project': customProjectName || 'Custom Project'
             };
 
             useCaseText.textContent = useCaseNames[useCase];
             successBox.style.display = 'block';
         }
 
+        function updateCustomProject(field, value) {
+            if (field === 'name') {
+                customProjectName = value;
+            } else if (field === 'description') {
+                customProjectDescription = value;
+            }
+
+            // Update success message if custom project is selected
+            if (selectedUseCase === 'custom-project' && customProjectName) {
+                const useCaseText = document.getElementById('selectedUseCaseText');
+                useCaseText.textContent = customProjectName;
+            }
+        }
+
         function generateUserStory() {
-            // Filter stories by selected use case
-            let availableStories = sampleUserStories;
-            if (selectedUseCase) {
-                availableStories = sampleUserStories.filter(story => story.useCase === selectedUseCase);
+            let randomStory;
+
+            // Handle custom project
+            if (selectedUseCase === 'custom-project') {
+                if (!customProjectName || !customProjectDescription) {
+                    alert('Please enter both a project name and description for your custom project.');
+                    return;
+                }
+
+                // Generate a generic user story for the custom project
+                randomStory = {
+                    useCase: 'custom-project',
+                    role: 'End User',
+                    action: `use the ${customProjectName} to ${customProjectDescription}`,
+                    benefit: 'I can achieve my goals more efficiently and effectively',
+                    acceptanceCriteria: [
+                        'System provides intuitive user interface',
+                        'Core functionality works as described',
+                        'Data is stored securely and reliably',
+                        'System responds quickly to user actions',
+                        'Error messages are clear and helpful'
+                    ],
+                    technicalConsiderations: [
+                        'Scalable architecture to handle growth',
+                        'Secure authentication and authorization',
+                        'RESTful API design for flexibility',
+                        'Responsive design for mobile and desktop',
+                        'Comprehensive error handling and logging'
+                    ]
+                };
             } else {
-                // If no use case selected, use general stories
-                availableStories = sampleUserStories.filter(story => story.useCase === 'general');
+                // Filter stories by selected use case
+                let availableStories = sampleUserStories;
+                if (selectedUseCase) {
+                    availableStories = sampleUserStories.filter(story => story.useCase === selectedUseCase);
+                } else {
+                    // If no use case selected, use general stories
+                    availableStories = sampleUserStories.filter(story => story.useCase === 'general');
+                }
+
+                if (availableStories.length === 0) {
+                    alert('No user stories available for the selected use case. Please try another.');
+                    return;
+                }
+
+                randomStory = availableStories[Math.floor(Math.random() * availableStories.length)];
             }
 
-            if (availableStories.length === 0) {
-                alert('No user stories available for the selected use case. Please try another.');
-                return;
-            }
-
-            const randomStory = availableStories[Math.floor(Math.random() * availableStories.length)];
             generatedUserStory = randomStory;
 
             const output = document.getElementById('userStoryOutput');
