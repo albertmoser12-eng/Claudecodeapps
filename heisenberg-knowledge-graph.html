@@ -227,7 +227,7 @@
     <div class="container">
         <div class="header">
             <h1>HEISENBERG</h1>
-            <div class="subtitle">Knowledge Graph - The Methamphetamine Empire</div>
+            <div class="subtitle">Knowledge Graph - From Quantum Physics to Breaking Bad</div>
         </div>
 
         <div class="graph-container">
@@ -258,6 +258,10 @@
                 <div class="legend-item">
                     <div class="legend-color" style="background: #44ffff;"></div>
                     <div class="legend-label">Locations</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ff9900;"></div>
+                    <div class="legend-label">Scientist/Science</div>
                 </div>
             </div>
 
@@ -308,6 +312,11 @@
 
                 // Other locations
                 { id: 'abq', label: 'Albuquerque', category: 'location', description: 'Base of operations for the methamphetamine empire.' },
+
+                // Scientist and Science
+                { id: 'werner', label: 'Werner Heisenberg', category: 'scientist', description: 'German theoretical physicist (1901-1976) and one of the key pioneers of quantum mechanics. Nobel Prize winner in Physics (1932) for the creation of quantum mechanics.' },
+                { id: 'uncertainty', label: 'Uncertainty Principle', category: 'scientist', description: 'Heisenberg\'s famous principle stating that the position and momentum of a particle cannot both be precisely determined at the same time. A fundamental concept in quantum mechanics.' },
+                { id: 'quantum', label: 'Quantum Mechanics', category: 'scientist', description: 'Branch of physics pioneered by Werner Heisenberg dealing with physical phenomena at microscopic scales. Forms the foundation of modern physics.' },
             ],
             links: [
                 // Heisenberg connections
@@ -353,6 +362,11 @@
                 { source: 'rv-lab', target: 'blue-meth', label: 'produces', strength: 'medium' },
                 { source: 'los-pollos', target: 'abq', label: 'located in', strength: 'weak' },
                 { source: 'heisenberg', target: 'abq', label: 'operates in', strength: 'medium' },
+
+                // Science connections
+                { source: 'heisenberg', target: 'werner', label: 'alias inspired by', strength: 'strong' },
+                { source: 'werner', target: 'uncertainty', label: 'discovered', strength: 'strong' },
+                { source: 'werner', target: 'quantum', label: 'pioneered', strength: 'strong' },
             ]
         };
 
@@ -363,7 +377,8 @@
             family: '#4477ff',
             law: '#ffaa00',
             business: '#aa44ff',
-            location: '#44ffff'
+            location: '#44ffff',
+            scientist: '#ff9900'
         };
 
         // Set up SVG
