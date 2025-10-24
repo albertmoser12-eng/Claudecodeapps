@@ -378,26 +378,179 @@
 
         <div class="progress-bar">
             <div class="progress-step active" data-step="1" onclick="goToSection(0)">
-                <span>Preparation</span>
+                <span>Vision</span>
             </div>
             <div class="progress-step" data-step="2" onclick="goToSection(1)">
-                <span>User Stories</span>
+                <span>Modules</span>
             </div>
             <div class="progress-step" data-step="3" onclick="goToSection(2)">
-                <span>Specification</span>
+                <span>Preparation</span>
             </div>
             <div class="progress-step" data-step="4" onclick="goToSection(3)">
-                <span>Code Generation</span>
+                <span>User Stories</span>
             </div>
             <div class="progress-step" data-step="5" onclick="goToSection(4)">
+                <span>Specification</span>
+            </div>
+            <div class="progress-step" data-step="6" onclick="goToSection(5)">
+                <span>Code</span>
+            </div>
+            <div class="progress-step" data-step="7" onclick="goToSection(6)">
                 <span>Iteration</span>
             </div>
         </div>
 
         <div class="content">
-            <!-- Section 1: Preparation -->
+            <!-- Section 1: Vision and Outcomes -->
             <div class="section active" id="section-0">
-                <h2>📋 Step 1: Preparation</h2>
+                <h2>🎯 Step 1: Define the Vision and Outcomes</h2>
+
+                <div class="info-box">
+                    <h3>Goal</h3>
+                    <p>Capture the essence of what the app should achieve, not yet how. This step sets the foundation for everything that follows.</p>
+                </div>
+
+                <h3>Key Questions to Answer</h3>
+                <div class="checklist">
+                    <div class="checklist-item" onclick="toggleCheck(this)">
+                        <input type="checkbox">
+                        <label><strong>What problem will this app solve?</strong> - Define the core problem clearly</label>
+                    </div>
+                    <div class="checklist-item" onclick="toggleCheck(this)">
+                        <input type="checkbox">
+                        <label><strong>Who are the users and what are their key tasks?</strong> - Identify personas and workflows</label>
+                    </div>
+                    <div class="checklist-item" onclick="toggleCheck(this)">
+                        <input type="checkbox">
+                        <label><strong>What outcome or "vibe" do you want users to feel?</strong> - e.g., calm, empowered, playful</label>
+                    </div>
+                    <div class="checklist-item" onclick="toggleCheck(this)">
+                        <input type="checkbox">
+                        <label><strong>What success metrics define "done"?</strong> - Adoption, functionality, UX quality, etc.</label>
+                    </div>
+                </div>
+
+                <h3>Deliverables for This Step</h3>
+                <ul>
+                    <li><strong>Vision Statement:</strong> 1–2 paragraphs capturing the essence of your app</li>
+                    <li><strong>Core User Stories:</strong> Short list of the main user journeys</li>
+                    <li><strong>Moodboard or Vibe Brief:</strong> Style, tone, and experience guidelines</li>
+                </ul>
+
+                <div class="success-box">
+                    <strong>💡 Pro Tip:</strong> A clear vision statement acts as your North Star. When in doubt during development, refer back to this vision to ensure you're building the right thing.
+                </div>
+
+                <h3>Example Vision Statement</h3>
+                <div class="spec-template">
+                    <p><strong>App:</strong> Customer Feedback Management System</p>
+                    <p><strong>Vision:</strong> Empower our support team to effortlessly capture, categorize, and analyze customer feedback in real-time. The app should feel intuitive and calm, reducing the stress of manual data entry while surfacing actionable insights that drive product improvements. Success means 90% adoption within 3 months, with average response time to customer issues reduced by 40%.</p>
+                    <p><strong>Vibe:</strong> Clean, professional, data-driven yet human. Think "Airtable meets Zendesk" – powerful but approachable.</p>
+                </div>
+
+                <div class="navigation">
+                    <button class="secondary" disabled>← Previous</button>
+                    <button onclick="nextSection()">Next: System Modules →</button>
+                </div>
+            </div>
+
+            <!-- Section 2: System Modules -->
+            <div class="section" id="section-1">
+                <h2>🧩 Step 2: Break Down the System Into Modules</h2>
+
+                <div class="info-box">
+                    <h3>Goal</h3>
+                    <p>Convert the vision into logical parts that AI (and your team) can iterate on. Modular thinking enables parallel development and clearer specifications.</p>
+                </div>
+
+                <h3>Common System Modules</h3>
+                <p>Identify which of these modules apply to your app:</p>
+
+                <div class="checklist">
+                    <div class="checklist-item" onclick="toggleCheck(this)">
+                        <input type="checkbox">
+                        <label><strong>UI/UX and Visual Design</strong> - Frontend components, user flows, design system</label>
+                    </div>
+                    <div class="checklist-item" onclick="toggleCheck(this)">
+                        <input type="checkbox">
+                        <label><strong>Core Logic or Algorithmic Engine</strong> - Business rules, calculations, workflows</label>
+                    </div>
+                    <div class="checklist-item" onclick="toggleCheck(this)">
+                        <input type="checkbox">
+                        <label><strong>Data Model / API Layer</strong> - Database schema, REST/GraphQL APIs, data validation</label>
+                    </div>
+                    <div class="checklist-item" onclick="toggleCheck(this)">
+                        <input type="checkbox">
+                        <label><strong>Authentication & Permissions</strong> - User login, roles, access control</label>
+                    </div>
+                    <div class="checklist-item" onclick="toggleCheck(this)">
+                        <input type="checkbox">
+                        <label><strong>Integrations</strong> - GPT API, payments, third-party services, webhooks</label>
+                    </div>
+                    <div class="checklist-item" onclick="toggleCheck(this)">
+                        <input type="checkbox">
+                        <label><strong>Deployment and Monitoring</strong> - CI/CD, hosting, logging, analytics</label>
+                    </div>
+                </div>
+
+                <h3>Deliverables for This Step</h3>
+                <ul>
+                    <li><strong>Modular Architecture Map:</strong> Textual or diagram showing all major components</li>
+                    <li><strong>Dependency Graph:</strong> What depends on what? Which modules can be built in parallel?</li>
+                </ul>
+
+                <h3>Example Architecture Map</h3>
+                <div class="spec-template">
+                    <p><strong>Module 1: Frontend (React SPA)</strong></p>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>Dashboard component</li>
+                        <li>Feedback submission form</li>
+                        <li>Analytics visualizations</li>
+                        <li>Design system (Tailwind CSS)</li>
+                    </ul>
+
+                    <p style="margin-top: 20px;"><strong>Module 2: Backend API (Node.js/Express)</strong></p>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>RESTful endpoints for CRUD operations</li>
+                        <li>Business logic layer</li>
+                        <li>Data validation middleware</li>
+                    </ul>
+
+                    <p style="margin-top: 20px;"><strong>Module 3: Database (PostgreSQL)</strong></p>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>Feedback table</li>
+                        <li>Users and roles tables</li>
+                        <li>Analytics aggregation views</li>
+                    </ul>
+
+                    <p style="margin-top: 20px;"><strong>Module 4: Authentication (Auth0 or similar)</strong></p>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>OAuth 2.0 integration</li>
+                        <li>Role-based access control</li>
+                    </ul>
+
+                    <p style="margin-top: 20px;"><strong>Dependencies:</strong></p>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>Frontend depends on Backend API</li>
+                        <li>Backend depends on Database</li>
+                        <li>All modules depend on Authentication</li>
+                        <li>Analytics can be built after core CRUD is working</li>
+                    </ul>
+                </div>
+
+                <div class="warning-box">
+                    <strong>⚠️ Important:</strong> Start with the minimal set of modules needed for your MVP. You can always add more modules later as your app evolves.
+                </div>
+
+                <div class="navigation">
+                    <button class="secondary" onclick="previousSection()">← Previous</button>
+                    <button onclick="nextSection()">Next: Preparation →</button>
+                </div>
+            </div>
+
+            <!-- Section 3: Preparation -->
+            <div class="section" id="section-2">
+                <h2>📋 Step 3: Preparation</h2>
 
                 <div class="info-box">
                     <h3>What is Vibe Coding?</h3>
@@ -484,9 +637,9 @@
                 </div>
             </div>
 
-            <!-- Section 2: User Stories -->
-            <div class="section" id="section-1">
-                <h2>📝 Step 2: User Stories</h2>
+            <!-- Section 4: User Stories -->
+            <div class="section" id="section-3">
+                <h2>📝 Step 4: User Stories</h2>
 
                 <h3>Start with the Business Problem</h3>
                 <p>Begin by explaining the business context, user needs, and desired outcomes. AI works best when it understands the "why" behind your requirements.</p>
@@ -529,9 +682,9 @@
                 </div>
             </div>
 
-            <!-- Section 3: Specification -->
-            <div class="section" id="section-2">
-                <h2>📐 Step 3: Specification</h2>
+            <!-- Section 5: Specification -->
+            <div class="section" id="section-4">
+                <h2>📐 Step 5: Specification</h2>
 
                 <h3>Transform User Story into Technical Specification</h3>
                 <p>A good specification bridges business requirements and technical implementation. It should be detailed enough for AI to generate accurate code.</p>
@@ -569,9 +722,9 @@
                 </div>
             </div>
 
-            <!-- Section 4: Code Generation -->
-            <div class="section" id="section-3">
-                <h2>💻 Step 4: Code Generation</h2>
+            <!-- Section 6: Code Generation -->
+            <div class="section" id="section-5">
+                <h2>💻 Step 6: Code Generation</h2>
 
                 <h3>From Specification to Working Code</h3>
                 <p>With a solid specification, AI can generate code that matches your requirements. The key is to be specific about your technology stack and coding standards.</p>
@@ -636,9 +789,9 @@
                 </div>
             </div>
 
-            <!-- Section 5: Iteration -->
-            <div class="section" id="section-4">
-                <h2>🔄 Step 5: Iteration & Refinement</h2>
+            <!-- Section 7: Iteration -->
+            <div class="section" id="section-6">
+                <h2>🔄 Step 7: Iteration & Refinement</h2>
 
                 <h3>The Iterative Cycle</h3>
                 <p>Vibe coding is not a one-shot process. It's a continuous cycle of refinement between specifications, code, and testing.</p>
@@ -983,7 +1136,7 @@
         ];
 
         function goToSection(index) {
-            if (index >= 0 && index < 5) {
+            if (index >= 0 && index < 7) {
                 const sections = document.querySelectorAll('.section');
                 const steps = document.querySelectorAll('.progress-step');
 
@@ -1009,7 +1162,7 @@
         }
 
         function nextSection() {
-            if (currentSection < 4) {
+            if (currentSection < 6) {
                 goToSection(currentSection + 1);
             }
         }
